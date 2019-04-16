@@ -34,10 +34,10 @@ class Config:
     START_E = 0.0
 
     # Errors placed on starting map
-    S_THRESH = 0.5
+    S_TEND = 0.5
 
     # Variance in individual thresholds
-    THRESH_SD = 0.001
+    TEND_SD = 0.001
 
     # starting weight for organization
     NOISE = 0.5
@@ -46,7 +46,7 @@ class Config:
     NORMAL = 0
 
     # Type of signal that agents receive
-    ORG_WEIGHT = 0.5
+    S_ORG_WEIGHT = 0.5
 
     # Probability that machine (cell) becomes damaged
     PROB_E = 0.03
@@ -55,7 +55,7 @@ class Config:
     PROB_E_SD = 0.03
 
     # Standard deviation of latent error
-    PROB_A = 0.75
+    PROB_A = 0.6
 
     # Improvement factors when latent error detected
     IMPROVE = 0.0
@@ -69,7 +69,7 @@ class Config:
     D_DOWN = 0.4
 
     # Organizational constraint to check errors
-    ORG_CHECK = 32
+    ORG_CHECK = 8
 
     # Organizational threshold to accept signal
     ORG_THRESH = 0.5
@@ -78,7 +78,7 @@ class Config:
     DEC_STRU = 0
 
     # Organizational detection capability
-    ORG_DETECT = 1
+    ORG_DETECT = 0.8
 
     # Use divisional checks instead of overall
     MIDDLE = 1
@@ -99,11 +99,11 @@ class Params:
                5: ('prob_e_sd', 'Probability of pot. error deviation'),
                6: ('prob_a', 'Probability of activated error'),
                7: ('start_e', 'Initial error rate'),
-               8: ('s_thresh', 'Starting threshold'),
+               8: ('s_tend', 'Initial tendency to report'),
                9: ('thresh_sd', 'Starting threshold variance'),
                10: ('noise', 'Noise in agent signal'),
                11: ('normal', 'Noise distribution'),
-               12: ('org_weight', 'Starting Org. weight'),
+               12: ('s_org_weight', 'Initial weight on worker reports'),
                13: ('org_thresh', 'Org. accept threshold'),
                14: ('d_up', 'Delta Agents Commission'),
                15: ('d_down', 'Delta Agents Omission'),
@@ -116,8 +116,8 @@ class Params:
                # After here output variables
                22: ('pathogens', 'Pct. of potential errors'),
                23: ('errors', 'Pct. of activated errors'),
-               24: ('threshold', 'Average threshold'),
-               25: ('threshold_sd', 'Threshold Std. Dev.'),
+               24: ('tend', 'Average threshold'),
+               25: ('tend_sd', 'Threshold Std. Dev.'),
                26: ('reported', 'Pct. of agents reporting'),
                27: ('listened', 'Pct. of fields investigated'),
                28: ('repaired', 'Pct. of fields repaired'),
@@ -127,14 +127,14 @@ class Params:
                32: ('feedback_fail', 'Pct. feedback failure'),
                33: ('feedback_omit', 'Pct. feedback omission'),
                34: ('feedback_commit', 'Pct. feedback commission'),
-               35: ('org_weight', 'Org. weight'),
+               35: ('org_weight', 'Weight on worker reports'),
                36: ('org_correct', 'Overall signal correct'),
                37: ('agents_correct', 'Agent signal correct'),
                38: ('agents_percentage', 'Pct. report. workers correct'),
                39: ('near_miss', 'Near Miss'),
                40: ('near_det', 'Near Miss detected'),
                41: ('near_det_ave', 'Average near Miss detected'),
-               42: ('near_det_roll', 'Near Miss detected (roll. ave.)'),
+               42: ('near_det_roll', 'Near Miss detected'),
                43: ('failure', 'Failure Rate'),
                44: ('failure_roll', 'Failure Rate'),
                45: ('failure_ave', 'Average Failure Rate'),
@@ -153,15 +153,15 @@ class Params:
     GRAPH 3 takes care of rounds as IV
     """
     VAR_1 = 8
-    VAR_2 = 20
+    VAR_2 = 1
     if VAR_2 == 2:
         Config.Y = Config.X
         Config.N = int(Config.X * Config.Y * 0.2)
         Config.ORG_CHECK = Config.N / 2
 
     # For integers use arange and for floats use linspace
-    VAR_1_VALUES = (0.8, 0.5, 0.2)
-    VAR_2_VALUES = (0.6, 0.7, 0.8, 0.9, 1.0)
+    VAR_1_VALUES = (0.9, 0.5, 0.1)
+    VAR_2_VALUES = [16,32,48,64,80]
 
     VAR_1_NAME = str(COLUMNS[VAR_1][0])
     VAR_2_NAME = str(COLUMNS[VAR_2][0])
@@ -195,9 +195,9 @@ def show_first_arguments(first_args):
     print('Initial error, prob. of Error and Activation :',
           first_args.START_E, first_args.PROB_E, first_args.PROB_A)
     print('Starting Threshold and Variance              :',
-          first_args.S_THRESH, first_args.THRESH_SD)
+          first_args.S_TEND, first_args.TEND_SD)
     print('Starting Org. Weight and Threshold           :',
-          first_args.ORG_WEIGHT, first_args.ORG_THRESH)
+          first_args.S_ORG_WEIGHT, first_args.ORG_THRESH)
     print('Downward and upward updating                 :',
           first_args.D_UP, first_args.D_DOWN)
     print('Org. updating                                :', first_args.D_ORG)
@@ -270,7 +270,8 @@ def main_loop_multi():
     # Use a process-safe dictionary to hold the intermediate results
     results_dict = Manager().dict()
     argument_sets = get_argument_sets(results_dict)
-    with Pool() as pool:
+    # processes=2
+    with Pool(processes=2) as pool:
         pool.map(wrapper, argument_sets)
 
     RES = np.zeros((len(argument_sets), Config.ROUNDS, Params.NO_ATTRIBUTES))
