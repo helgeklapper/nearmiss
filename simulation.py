@@ -245,7 +245,7 @@ def raw_interpret(x, y, signal_field, location_idx_sets, agent_tend):
         if signal_field[row, col] > 0:
             # Agent interpretation : if there is a clear error,
             # which is larger than the threshold, report it
-            if signal_field[row, col] > agent_tend[idx]:
+            if signal_field[row, col] < agent_tend[idx]:
                 test = signal_field[row, col]
                 tend = agent_tend[idx]
                 signal_int[row, col] = 1
@@ -342,7 +342,7 @@ def org_investigate(x, y, interpret, org_check, org_listening, divisions, int_w)
                 org_int[y_c, x_c] = 1
                 org_check -= 1
             else:
-                checks_left = 0
+                org_check = 0
             # print('Checks available agents', org_check)
             while org_check > 0 and iteration < (x*y):
                 number = random_order[iteration]
@@ -635,7 +635,7 @@ def simulation(args):
                                                 error_post, args.ORG_THRESH)
 
             # Next line for testing
-            near_miss[e, round_no] = error_theory
+            near_miss[e, round_no] = error_theory - error_post
             if error_theory == 1:
                 near_det[e, round_no] = 1 - error_theory_post
             else:

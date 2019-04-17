@@ -16,7 +16,7 @@ from simulation import simulation, time_left
 
 class Config:
     # Number of Environments sampled
-    E = 1000
+    E = 25000
 
     # Number of rounds
     ROUNDS = 100
@@ -65,8 +65,8 @@ class Config:
 
     # Tendency to change threshold upwards and downwards
     D_ORG = 0.15
-    D_UP = 0.2
-    D_DOWN = 0.4
+    D_UP = 0.4
+    D_DOWN = 0.2
 
     # Organizational constraint to check errors
     ORG_CHECK = 8
@@ -112,25 +112,25 @@ class Params:
                18: ('org_check', 'Org. constraint'),
                19: ('reset', 'Reset after failure'),
                20: ('org_detect', 'Org. detection capability'),
-               21: ('middle', 'No. of middle managers'),
+               21: ('middle', 'Divisions'),
                # After here output variables
-               22: ('pathogens', 'Pct. of potential errors'),
-               23: ('errors', 'Pct. of activated errors'),
-               24: ('tend', 'Average threshold'),
-               25: ('tend_sd', 'Threshold Std. Dev.'),
-               26: ('reported', 'Pct. of agents reporting'),
-               27: ('listened', 'Pct. of fields investigated'),
-               28: ('repaired', 'Pct. of fields repaired'),
-               29: ('omission', 'Pct. omission errors'),
-               30: ('commission', 'Pct. commission errors'),
+               22: ('pathogens', 'Potential errors'),
+               23: ('errors', 'Activated errors'),
+               24: ('tend', 'Tendency to report'),
+               25: ('tend_sd', 'Tendency Std. Dev.'),
+               26: ('reported', 'Agents reporting'),
+               27: ('listened', 'Units investigated'),
+               28: ('repaired', 'Units repaired'),
+               29: ('omission', 'Omission errors'),
+               30: ('commission', 'Commission errors'),
                31: ('ind_error', 'Average error rate'),
-               32: ('feedback_fail', 'Pct. feedback failure'),
-               33: ('feedback_omit', 'Pct. feedback omission'),
-               34: ('feedback_commit', 'Pct. feedback commission'),
+               32: ('feedback_fail', 'Feedback failure'),
+               33: ('feedback_omit', 'Feedback omission'),
+               34: ('feedback_commit', 'Feedback commission'),
                35: ('org_weight', 'Weight on worker reports'),
                36: ('org_correct', 'Overall signal correct'),
                37: ('agents_correct', 'Agent signal correct'),
-               38: ('agents_percentage', 'Pct. report. workers correct'),
+               38: ('agents_percentage', 'Accuracy of workers'),
                39: ('near_miss', 'Near Miss'),
                40: ('near_det', 'Near Miss detected'),
                41: ('near_det_ave', 'Average near Miss detected'),
@@ -153,15 +153,16 @@ class Params:
     GRAPH 3 takes care of rounds as IV
     """
     VAR_1 = 8
-    VAR_2 = 1
+    VAR_2 = 7
     if VAR_2 == 2:
         Config.Y = Config.X
         Config.N = int(Config.X * Config.Y * 0.2)
         Config.ORG_CHECK = Config.N / 2
 
     # For integers use arange and for floats use linspace
-    VAR_1_VALUES = (0.9, 0.5, 0.1)
-    VAR_2_VALUES = [16,32,48,64,80]
+    VAR_1_VALUES = [0.9,0.5,0.1]
+    VAR_2_VALUES = np.arange(0.00, 1.05, 0.05)
+    # np.arange(16,95,16)
 
     VAR_1_NAME = str(COLUMNS[VAR_1][0])
     VAR_2_NAME = str(COLUMNS[VAR_2][0])
@@ -230,7 +231,7 @@ def get_argument_sets(results_dict):
     return argument_sets
 
 
-def main_loop(show_progress=False):
+def main_loop(show_progress=True):
     np.warnings.filterwarnings('ignore')
 
     argument_sets = get_argument_sets(None)
@@ -264,6 +265,8 @@ def wrapper(args):
 
     arguments, instance, results_dict = args
     results_dict[instance] = simulation(arguments)
+    print('Instance Wrapper No.: ', instance)
+    print('Time: ', datetime.datetime.now().replace(microsecond=0))
 
 
 def main_loop_multi():
@@ -271,7 +274,10 @@ def main_loop_multi():
     results_dict = Manager().dict()
     argument_sets = get_argument_sets(results_dict)
     # processes=2
-    with Pool(processes=2) as pool:
+    instances = len(Params.VAR_1_VALUES) * len(Params.VAR_2_VALUES)
+    print('Time: ', datetime.datetime.now().replace(microsecond=0))
+    print('Instances', instances)
+    with Pool(processes=6) as pool:
         pool.map(wrapper, argument_sets)
 
     RES = np.zeros((len(argument_sets), Config.ROUNDS, Params.NO_ATTRIBUTES))

@@ -76,6 +76,15 @@ def graph1(run_dir, variable_num, res, dpi, round_no, colors="Blues"):
         elif Params.VAR_1 == 13 and x == 2:
             ax.plot(M, Z, label='Consensus', linestyle=style,
                     marker='s', markevery=2)
+        elif Params.VAR_1 == 8 and x <= 0.3:
+            ax.plot(M, Z, label='Low', linestyle=style,
+                    marker='^', markevery=2)
+        elif Params.VAR_1 == 8 and x < 0.7 and x > 0.3:
+            ax.plot(M, Z, label='Moderate', linestyle=style,
+                    marker='o', markevery=2)
+        elif Params.VAR_1 == 8 and x >= 0.7:
+            ax.plot(M, Z, label='High', linestyle=style,
+                    marker='v', markevery=2)
         else:
             ax.plot(M, Z, label=str(x), linestyle=style,
                     marker=marker, markevery=2)
@@ -103,13 +112,13 @@ def graph1(run_dir, variable_num, res, dpi, round_no, colors="Blues"):
         plt.savefig(graph_name, format='png', bbox_extra_artists=[lgd])
     else:
         plt.savefig(graph_name, format='png')
-
+    """
     graph_name = os.path.join(run_dir, 'svg', name + '.svg')
     if len(Params.VAR_1_VALUES) > 1:
         plt.savefig(graph_name, format='svg', bbox_extra_artists=[lgd])
     else:
         plt.savefig(graph_name, format='svg')
-
+    """
     plt.close()
 
 
@@ -210,11 +219,11 @@ def graph2(run_dir, var_1, results, res, dpi, round_no,
     os.makedirs(os.path.join(run_dir, 'png', results), exist_ok=True)
     graph_name = os.path.join(run_dir, 'png', results, name + '.png')
     plt.savefig(graph_name, format='png', bbox_extra_artists=[lgd])
-
+    """
     os.makedirs(os.path.join(run_dir, 'svg', results), exist_ok=True)
     graph_name = os.path.join(run_dir, 'svg', results, name + '.svg')
     plt.savefig(graph_name, format='svg', bbox_extra_artists=[lgd])
-
+    """
     plt.close()
 
 
@@ -274,6 +283,15 @@ def graph3(run_dir, variable_num, res, dpi, var_2=0, colors="Blues_d"):
         elif Params.VAR_1 == 13 and x == 2:
             ax.plot(X, Z, label='Consensus', linestyle=style,
                     marker='s', markevery=0.26)
+        elif Params.VAR_1 == 8 and x <= 0.3:
+            ax.plot(X, Z, label='Low', linestyle=style,
+                    marker='^', markevery=(9, 10))
+        elif Params.VAR_1 == 8 and x < 0.7 and x > 0.3:
+            ax.plot(X, Z, label='Moderate', linestyle=style,
+                    marker='o', markevery=(9, 10))
+        elif Params.VAR_1 == 8 and x >= 0.7:
+            ax.plot(X, Z, label='High', linestyle=style,
+                    marker='v', markevery=(9, 10))
         else:
             ax.plot(X, Z, label=str(x), linestyle=style, marker=marker,
                     markevery=(9, 10))
@@ -301,7 +319,7 @@ def graph3(run_dir, variable_num, res, dpi, var_2=0, colors="Blues_d"):
         plt.savefig(graph_name, format='png', bbox_extra_artists=[lgd])
     else:
         plt.savefig(graph_name, format='png')
-
+    """
     os.makedirs(os.path.join(run_dir, 'svg', str(Params.VAR_2_VALUES[var_2])),
                 exist_ok=True)
     graph_name = \
@@ -311,6 +329,7 @@ def graph3(run_dir, variable_num, res, dpi, var_2=0, colors="Blues_d"):
         plt.savefig(graph_name, format='svg', bbox_extra_artists=[lgd])
     else:
         plt.savefig(graph_name, format='svg')
+    """
 
     # plt.show()
     plt.close()
@@ -397,11 +416,11 @@ def graph4(run_dir, var_1, results, res, dpi, round_no, colors="Blues_d"):
     os.makedirs(os.path.join(run_dir, 'png', results), exist_ok=True)
     graph_name = os.path.join(run_dir, 'png', results, name + '.png')
     plt.savefig(graph_name, format='png', bbox_extra_artists=[lgd])
-
+    """
     os.makedirs(os.path.join(run_dir, 'svg', results), exist_ok=True)
     graph_name = os.path.join(run_dir, 'svg', results, name + '.svg')
     plt.savefig(graph_name, format='svg', bbox_extra_artists=[lgd])
-
+    """
     plt.close()
 
 
