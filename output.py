@@ -15,7 +15,7 @@ sns.set(style="ticks", context="talk", )
 sns.set_palette(sns.color_palette("Blues_d"))
 
 
-def graph1(run_dir, variable_num, res, dpi, round_no, colors="Blues"):
+def graph1(run_dir, variable_num, res, dpi, round_no, colors="Blues_d"):
     """Creates a graph for defined variable"""
     from main import Config, Params
 
@@ -123,7 +123,7 @@ def graph1(run_dir, variable_num, res, dpi, round_no, colors="Blues"):
 
 
 def graph2(run_dir, var_1, results, res, dpi, round_no,
-           var_2_ind=0, colors="Greens_d"):
+           var_2_ind=0, colors="Blues_d"):
     """Creates a graph for defined variable"""
     from main import Config, Params
 
@@ -160,23 +160,23 @@ def graph2(run_dir, var_1, results, res, dpi, round_no,
 
     plt.ylabel(results)
     if results == 'Errors':
-        values = (22, 23)
+        values = (23, 24)
     elif results == 'Reaction':
-        values = (26, 27, 28)
+        values = (27, 28, 29)
     elif results == 'Error Rate':
-        values = (29, 30)
+        values = (30, 31)
     elif results == 'Feedback Omission':
-        values = (29, 33)
-    elif results == 'Feedback Commission':
         values = (30, 34)
+    elif results == 'Feedback Commission':
+        values = (31, 35)
     elif results == 'Near Miss Detection':
-        values = (39, 40)
+        values = (41, 42)
 
     line_no = 0
     for x in values:
-        if x == 22:
+        if x == 23:
             labels = 'Latent errors'
-        elif x == 23:
+        elif x == 24:
             labels = 'Activated errors'
         else:
             labels = Params.COLUMNS[x][1]
@@ -201,7 +201,7 @@ def graph2(run_dir, var_1, results, res, dpi, round_no,
                            res[:, Config.ROUNDS - 1, x])
         # print('Z\n',Z)
         ax.plot(X, Z, label=labels, linestyle=style,
-                marker=marker, markevery=2)
+                marker=marker, markevery=(9, 10))
 
     box = ax.get_position()
 
@@ -371,15 +371,15 @@ def graph4(run_dir, var_1, results, res, dpi, round_no, colors="Blues_d"):
     markers = ['v', '^', 'o', 's']
 
     if results == 'Signal':
-        values = (36, 38)
+        values = (38, 39)
         plt.ylabel("Accuracy")
         if Params.VAR_2 == 6:
             plt.xlabel("Ratio latent error")
     elif results == 'Signal2':
-        values = (36, 31)
+        values = (38, 32)
         plt.ylabel("Accuracy")
     elif results == 'Failure':
-        values = (39, 43)
+        values = (41, 45)
         plt.ylabel("Ratio")
         if Params.VAR_2 == 6:
             plt.xlabel("Ratio latent error")
@@ -438,7 +438,7 @@ def create_dirs(var_1_name, var_2_name):
         run_dir = "Sim_{0}_{1}_run{2}".format(var_1_name, var_2_name, run)
     os.makedirs(os.path.join(today, run_dir), exist_ok=True)
     os.makedirs(os.path.join(today, run_dir, 'png'), exist_ok=True)
-    os.makedirs(os.path.join(today, run_dir, 'svg'), exist_ok=True)
+    # os.makedirs(os.path.join(today, run_dir, 'svg'), exist_ok=True)
 
     csv_name = "%s_%s_%s.csv" % (today, var_1_name, var_2_name)
 
@@ -449,12 +449,12 @@ def create_graphs(run_dir, RES):
     from main import Config, Params
 
     if len(Params.VAR_2_VALUES) > 1:
-        for number in range(22, 47):
-            graph1(run_dir, number, RES, Config.DPI, 1, 'Greens_d')
+        for number in range(23, 49):
+            graph1(run_dir, number, RES, Config.DPI, 1, 'Blues_d')
             if Config.ROUNDS > 9:
-                graph1(run_dir, number, RES, Config.DPI, 10, 'Reds_d')
+                graph1(run_dir, number, RES, Config.DPI, 10, 'Blues_d')
             if Config.ROUNDS > 10:
-                graph1(run_dir, number, RES, Config.DPI, 20, 'Reds_d')
+                graph1(run_dir, number, RES, Config.DPI, 20, 'Blues_d')
             if Config.ROUNDS > 20:
                 graph1(run_dir, number, RES, Config.DPI, 50, 'Blues_d')
             if Config.ROUNDS > 50:
@@ -465,7 +465,7 @@ def create_graphs(run_dir, RES):
             graph4(run_dir, values, 'Failure', RES, Config.DPI, Config.ROUNDS)
 
     if Config.ROUNDS > 1:
-        for number in range(22, 47):
+        for number in range(23, 49):
             for values in range(len(Params.VAR_2_VALUES)):
                 graph3(run_dir, number, RES, Config.DPI, values, 'Blues_d')
         for values in Params.VAR_1_VALUES:
