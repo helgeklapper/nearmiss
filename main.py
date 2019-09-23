@@ -16,24 +16,24 @@ from simulation import simulation, time_left
 
 class Config:
     # Number of Environments sampled
-    E = 25000
+    E = 150000
 
     # Number of rounds
     ROUNDS = 100
 
     # Number of parts/machines/divisions (columns)
-    X = 16
+    X = 32
 
     # Number of fail-safes (layers, rows)
-    Y = 5
+    Y = 12
 
     # Number of agents
-    N = 32
-
-    # Average starting threshold for individuals
-    START_E = 0.0
+    N = 64
 
     # Errors placed on starting map
+    START_E = 0.0
+    
+    # Average starting threshold for individuals
     S_TEND = 0.5
 
     # Variance in individual thresholds
@@ -49,13 +49,13 @@ class Config:
     S_ORG_WEIGHT = 0.5
 
     # Probability that machine (cell) becomes damaged
-    PROB_E = 0.03
+    PROB_E = 0.04
 
-    # Probability that if machine is damaged, machine breaks down
+    # Standard deviation of latent error    
     PROB_E_SD = 0.03
 
-    # Standard deviation of latent error
-    PROB_A = 0.6
+    # Probability that if machine is damaged, machine breaks down
+    PROB_A = 1
 
     # Improvement factors when latent error detected
     IMPROVE = 0.0
@@ -69,7 +69,10 @@ class Config:
     D_DOWN = 0.2
 
     # Organizational constraint to check errors
-    ORG_CHECK = 8
+    ORG_CHECK = 16
+
+    # Organizational constraint to check errors
+    ORG_CHECK_CHANGE = 0
 
     # Organizational threshold to accept signal
     ORG_THRESH = 0.5
@@ -78,7 +81,7 @@ class Config:
     DEC_STRU = 0
 
     # Organizational detection capability
-    ORG_DETECT = 0.8
+    ORG_DETECT = 1
 
     # Use divisional checks instead of overall
     MIDDLE = 1
@@ -103,42 +106,44 @@ class Params:
                9: ('thresh_sd', 'Starting threshold variance'),
                10: ('noise', 'Noise in agent signal'),
                11: ('normal', 'Noise distribution'),
-               12: ('s_org_weight', 'Initial weight on worker reports'),
+               12: ('s_org_weight', 'Weight on worker reports'),
                13: ('org_thresh', 'Org. accept threshold'),
-               14: ('d_up', 'Delta Agents Commission'),
-               15: ('d_down', 'Delta Agents Omission'),
-               16: ('d_org', 'Delta Org.'),
+               14: ('d_up', 'Commission Feedback'),
+               15: ('d_down', 'Omission Feedback'),
+               16: ('d_org', 'Organizational Reactivity'),
                17: ('dec_stru', 'Decision Structure'),
                18: ('org_check', 'Org. constraint'),
-               19: ('reset', 'Reset after failure'),
-               20: ('org_detect', 'Org. detection capability'),
-               21: ('middle', 'Divisions'),
+               19: ('org_check_change', 'Variable constraint'),
+               20: ('reset', 'Reset after failure'),
+               21: ('org_detect', 'Manager detection capability'),
+               22: ('middle', 'Divisions'),
                # After here output variables
-               22: ('pathogens', 'Potential errors'),
-               23: ('errors', 'Activated errors'),
-               24: ('tend', 'Tendency to report'),
-               25: ('tend_sd', 'Tendency Std. Dev.'),
-               26: ('reported', 'Agents reporting'),
-               27: ('listened', 'Units investigated'),
-               28: ('repaired', 'Units repaired'),
-               29: ('omission', 'Omission errors'),
-               30: ('commission', 'Commission errors'),
-               31: ('ind_error', 'Average error rate'),
-               32: ('feedback_fail', 'Feedback failure'),
-               33: ('feedback_omit', 'Feedback omission'),
-               34: ('feedback_commit', 'Feedback commission'),
-               35: ('org_weight', 'Weight on worker reports'),
-               36: ('org_correct', 'Overall signal correct'),
-               37: ('agents_correct', 'Agent signal correct'),
-               38: ('agents_percentage', 'Accuracy of workers'),
-               39: ('near_miss', 'Near Miss'),
-               40: ('near_det', 'Near Miss detected'),
-               41: ('near_det_ave', 'Average near Miss detected'),
-               42: ('near_det_roll', 'Near Miss detected'),
-               43: ('failure', 'Failure Rate'),
-               44: ('failure_roll', 'Failure Rate'),
-               45: ('failure_ave', 'Average Failure Rate'),
-               46: ('failure_dummy', 'Failed Organizations')
+               23: ('pathogens', 'Potential errors'),
+               24: ('errors', 'Activated errors'),
+               25: ('tend', 'Tendency to report'),
+               26: ('tend_sd', 'Tendency Std. Dev.'),
+               27: ('reported', 'Agents reporting'),
+               28: ('listened', 'Units investigated'),
+               29: ('repaired', 'Units repaired'),
+               30: ('omission', 'Omission errors'),
+               31: ('commission', 'Commission errors'),
+               32: ('ind_error', 'Average error rate'),
+               33: ('feedback_fail', 'Feedback failure'),
+               34: ('feedback_omit', 'Feedback omission'),
+               35: ('feedback_commit', 'Feedback commission'),
+               36: ('org_check', 'Org. investigation capability'),
+               37: ('org_weight', 'Weight on worker reports'),
+               38: ('org_correct', 'Overall signal correct'),
+               39: ('agents_correct', 'Agent signal correct'),
+               40: ('agents_percentage', 'Accuracy of workers'),
+               41: ('near_miss', 'Near miss rate'),
+               42: ('near_det', 'Near miss detected'),
+               43: ('near_det_ave', 'Average near miss detected'),
+               44: ('near_det_roll', 'Near miss detected'),
+               45: ('failure', 'Failure rate'),
+               46: ('failure_roll', 'Failure rate'),
+               47: ('failure_ave', 'Average failure rate'),
+               48: ('failure_dummy', 'Failed organizations')
                }
 
     NO_ATTRIBUTES = len(COLUMNS)
@@ -153,15 +158,15 @@ class Params:
     GRAPH 3 takes care of rounds as IV
     """
     VAR_1 = 8
-    VAR_2 = 7
+    VAR_2 = 4
     if VAR_2 == 2:
         Config.Y = Config.X
         Config.N = int(Config.X * Config.Y * 0.2)
         Config.ORG_CHECK = Config.N / 2
 
     # For integers use arange and for floats use linspace
-    VAR_1_VALUES = [0.9,0.5,0.1]
-    VAR_2_VALUES = np.arange(0.00, 1.05, 0.05)
+    VAR_1_VALUES = np.arange(0.1,1,0.4)
+    VAR_2_VALUES = [0.03]
     # np.arange(16,95,16)
 
     VAR_1_NAME = str(COLUMNS[VAR_1][0])
