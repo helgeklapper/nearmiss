@@ -16,7 +16,7 @@ from simulation import simulation, time_left
 
 class Config:
     # Number of Environments sampled
-    E = 150000
+    E = 10
 
     # Number of rounds
     ROUNDS = 100
@@ -32,7 +32,7 @@ class Config:
 
     # Errors placed on starting map
     START_E = 0.0
-    
+
     # Average starting threshold for individuals
     S_TEND = 0.5
 
@@ -51,7 +51,7 @@ class Config:
     # Probability that machine (cell) becomes damaged
     PROB_E = 0.04
 
-    # Standard deviation of latent error    
+    # Standard deviation of latent error
     PROB_E_SD = 0.03
 
     # Probability that if machine is damaged, machine breaks down
@@ -158,15 +158,17 @@ class Params:
     GRAPH 3 takes care of rounds as IV
     """
     VAR_1 = 8
-    VAR_2 = 4
+    VAR_2 = 14
     if VAR_2 == 2:
         Config.Y = Config.X
         Config.N = int(Config.X * Config.Y * 0.2)
         Config.ORG_CHECK = Config.N / 2
+    elif VAR_2 == 14:
+        Config.D_DOWN = Config.D_UP / 2
 
     # For integers use arange and for floats use linspace
-    VAR_1_VALUES = np.arange(0.1,1,0.4)
-    VAR_2_VALUES = [0.03]
+    VAR_1_VALUES = np.arange(0.1, 1, 0.4)
+    VAR_2_VALUES = [0, 0.1, 0.2, 0.3, 0.4, 0.5]
     # np.arange(16,95,16)
 
     VAR_1_NAME = str(COLUMNS[VAR_1][0])
@@ -213,7 +215,8 @@ def show_first_arguments(first_args):
 
 def get_argument_sets(results_dict):
     """
-    Create iterable with argument structs, instance and a ref to the result dict
+    Create iterable with argument structs,
+    instance and a ref to the result dict
     """
 
     var1_name = Params.COLUMNS[Params.VAR_1][0].upper()

@@ -46,7 +46,7 @@ def graph1(run_dir, variable_num, res, dpi, round_no, colors="Blues_d"):
     ax = plt.subplot(111)
     plt.ylabel(str(Params.COLUMNS[variable_num][1]))
     plt.xlabel(Params.VAR_2_LABEL)
-    plt.locator_params(axis='y', nticks=5)
+    plt.locator_params(axis='y', nbins=5)
     linestyles = ['-', '--']
     markers = ['v', '^', 'o', 's']
 
@@ -154,7 +154,7 @@ def graph2(run_dir, var_1, results, res, dpi, round_no,
     plt.grid()
     ax = plt.subplot(111)
     plt.xlabel('Rounds')
-    plt.locator_params(axis='y', nticks=5)
+    plt.locator_params(axis='y', nbins=5)
     linestyles = ['-', '--']
     markers = ['v', '^', 'o', 's']
 
@@ -258,7 +258,7 @@ def graph3(run_dir, variable_num, res, dpi, var_2=0, colors="Blues_d"):
     ax = plt.subplot(111)
     plt.ylabel(str(Params.COLUMNS[variable_num][1]))
     plt.xlabel('Rounds')
-    plt.locator_params(axis='y', nticks=5)
+    plt.locator_params(axis='y', nbins=5)
     linestyles = ['-', '--']
     markers = ['v', '^', 'o', 's']
 
@@ -366,7 +366,7 @@ def graph4(run_dir, var_1, results, res, dpi, round_no, colors="Blues_d"):
     ax = plt.subplot(111)
     plt.ylabel(results)
     plt.xlabel(Params.VAR_2_LABEL)
-    plt.locator_params(axis='y', nticks=5)
+    plt.locator_params(axis='y', nbins=5)
     linestyles = ['-', '--']
     markers = ['v', '^', 'o', 's']
 
@@ -430,8 +430,12 @@ def create_dirs(var_1_name, var_2_name):
     :return: the path for this run and the path of the CSV file
     """
     today = datetime.date.today().strftime("%Y%m%d")
+    code_dir = os.getcwd()
+    root = os.path.dirname(code_dir)
+    os.chdir(root)
     os.makedirs(today, exist_ok=True)
     run = 1
+    # File is saved one level above main directory used for output
     run_dir = "Sim_{0}_{1}_run{2}".format(var_1_name, var_2_name, run)
     while os.path.exists(os.path.join(today, run_dir)) is True:
         run += 1
