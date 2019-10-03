@@ -16,7 +16,7 @@ from simulation import simulation, time_left
 
 class Config:
     # Number of Environments sampled
-    E = 10
+    E = 2000
 
     # Number of rounds
     ROUNDS = 100
@@ -37,7 +37,7 @@ class Config:
     S_TEND = 0.5
 
     # Variance in individual thresholds
-    TEND_SD = 0.001
+    TEND_SD = 0
 
     # starting weight for organization
     NOISE = 0.5
@@ -52,7 +52,7 @@ class Config:
     PROB_E = 0.04
 
     # Standard deviation of latent error
-    PROB_E_SD = 0.03
+    PROB_E_SD = 0.00
 
     # Probability that if machine is damaged, machine breaks down
     PROB_A = 1
@@ -168,7 +168,7 @@ class Params:
 
     # For integers use arange and for floats use linspace
     VAR_1_VALUES = np.arange(0.1, 1, 0.4)
-    VAR_2_VALUES = [0, 0.1, 0.2, 0.3, 0.4, 0.5]
+    VAR_2_VALUES = np.arange(0, 0.25, 0.05)
     # np.arange(16,95,16)
 
     VAR_1_NAME = str(COLUMNS[VAR_1][0])

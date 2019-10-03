@@ -8,15 +8,18 @@ import os
 import numpy as np
 
 
-# TODO: Place errors with spreading errors
-# TODO: reverse signs of weight on agents
 def init_path_field(x, y, pr_e_mean, pre_e_sd):
     """
     Create field that on average has mean latent error prob.
     """
-    alpha = ((1 - pr_e_mean) / pre_e_sd ** 2 - (1 / pr_e_mean)) * pr_e_mean ** 2
-    beta = alpha * ((1 / pr_e_mean) - 1)
-    return np.random.beta(alpha, beta, (y, x))
+    if pre_e_sd > 0:
+        alpha = (((1 - pr_e_mean) / pre_e_sd ** 2 - (1 / pr_e_mean))
+                 * pr_e_mean ** 2)
+        beta = alpha * ((1 / pr_e_mean) - 1)
+        field = np.random.beta(alpha, beta, (y, x))
+    else:
+        field = np.ones((y, x)) * pr_e_mean
+    return field
 
 
 def place_errors(x, y, field, pr_e_field, reset, failure):
@@ -62,9 +65,12 @@ def init_agents(n, x, tend, tend_sd):
     """
     Iniatilizes agents with skills and other variables
     """
-    alpha = ((1 - tend) / tend_sd ** 2 - (1 / tend)) * tend ** 2
-    beta = alpha * ((1 / tend) - 1)
-    agent_vector = np.random.beta(alpha, beta, [n])
+    if tend_sd > 0:
+        alpha = ((1 - tend) / tend_sd ** 2 - (1 / tend)) * tend ** 2
+        beta = alpha * ((1 / tend) - 1)
+        agent_vector = np.random.beta(alpha, beta, [n])
+    else:
+        agent_vector = np.ones((n)) * tend
     agent_columns = np.arange(n) % x
     return agent_vector, agent_columns
 
@@ -75,7 +81,7 @@ def place_agents(x, y, n, agent_columns):
     """
     agent_locations = np.full((y, x), -1)
     agent_locations2 = np.zeros((y, x))
-    agent_locations_nos = []
+    agent_loc_nos = []
 
     for entry in range(n):
         coord_x = agent_columns[entry]
@@ -83,11 +89,11 @@ def place_agents(x, y, n, agent_columns):
             coord_y = np.random.choice(y)
             if agent_locations[coord_y, coord_x] == -1:
                 agent_locations[coord_y, coord_x] = entry
-                agent_locations_nos.append((coord_y, coord_x, entry))
+                agent_loc_nos.append((coord_y, coord_x, entry))
                 agent_locations2[coord_y, coord_x] = 1
                 break
 
-    return agent_locations, agent_locations2, agent_locations_nos
+    return agent_locations, agent_locations2, agent_loc_nos
 
 
 def field_test(x, y, field, full_field=1):
@@ -165,9 +171,8 @@ def field_test_linear(x, y, field, mean_pathogens):
     if random_number > mean_pathogens:
         failure = 1
         ff2 = field
-        
     return failure, ff2
-    
+
 
 def field_test_org(x, y, field, full_field=1):
     """
@@ -340,7 +345,7 @@ def org_investigate(x, y, interpret, org_check, org_listening, divisions, int_w)
     random_order = np.arange((x * y))
     np.random.shuffle(random_order)
     int_w_f = int_w.flatten('F')
-    
+
     if org_listening:
         if divisions == 1:
             iteration = 0
@@ -365,7 +370,7 @@ def org_investigate(x, y, interpret, org_check, org_listening, divisions, int_w)
                 # print('Position', number, 'Iteration', iteration)
                 x_c, y_c = np.divmod(number, y)
                 # print('Divmod y and x', y_c, x_c)
-                if (interpret[y_c, x_c] == 1 and 
+                if (interpret[y_c, x_c] == 1 and
                     org_int[y_c, x_c] == 0):
                     # Agent interpretation
                     # If there is a reporter error, investigate it
@@ -381,7 +386,7 @@ def org_investigate(x, y, interpret, org_check, org_listening, divisions, int_w)
                 div_start = div * len_division
                 checks_left = int(np.round(np.divide(org_check, divisions)))
                 rel_slice = int_w_f[div_start: (div_start + len_division)]
-                # relevant slice of 
+                # relevant slice of
                 max_index = np.argmax(rel_slice)
                 max_index = max_index + div_start
                 # print('Index for coords', max_index)
@@ -406,7 +411,7 @@ def org_investigate(x, y, interpret, org_check, org_listening, divisions, int_w)
                     x_c, y_c = np.divmod(number, y)
                     # print('Y coordinate', y_c)
                     # print('X coordinate', x_c)
-                    if (interpret[y_c, x_c] == 1 and 
+                    if (interpret[y_c, x_c] == 1 and
                         org_int[y_c, x_c] == 0):
                         # Agent interpretation
                         # If there is a reporter error, investigate it
@@ -480,6 +485,46 @@ def feedback(location_idx_sets, tends, repair_field, interpret,
     return tends, fb_failure, fb_comm, fb_omit
 
 
+def feedback_general(location_idx_sets, tends, repair_field, interpret,
+                     failure_field, d_up, d_down, org_int):
+    """
+    How individuals adapt their threshold depending on outcome and
+    own decision
+    """
+    fb_failure = 0
+    fb_comm = 0
+    fb_omit = 0
+    for row, col, agent_no in location_idx_sets:
+        # Did failure happen in my column?
+        failure_column = np.sum(failure_field[:, col])
+        reported = interpret[row, col]
+
+        if failure_column == 0:
+            # Boss check
+            if not org_int[row, col]:
+                continue
+
+            found = repair_field[row, col]
+            if reported == 0:
+                if found == 1:
+                    fb_omit += 1
+            else:
+                if found == 0:
+                    # Org investigates, but finds no problem
+                    fb_comm += 1
+        else:
+            if reported == 0 and failure_field[row, col] == 1:
+                # punishment because impending failure not foreseen
+                fb_failure += 1
+    for commit in range(fb_comm):
+        tends -= tends * d_down
+    for omit in range(fb_omit):
+        tends += (1 - tends) * d_up
+    for failure in range(fb_failure):
+        tends += (1 - tends) * d_up
+    return tends, fb_failure, fb_comm, fb_omit
+
+
 def org_feedback(no_fields_inv, no_fields_rep, org_dec, delta_org, org_weight,
                  org_listening, failure, org_thresh, org_check, org_check_change):
     """
@@ -514,11 +559,11 @@ def org_feedback(no_fields_inv, no_fields_rep, org_dec, delta_org, org_weight,
             to_agent = int(org_listening)
             # if not reported, why reduce?
 #            if org_check_change == 1:
-#                org_check -= 1        
+#                org_check -= 1
     org_check = np.maximum(1, org_check)
     if to_agent == 1:
         # if in direction of agents
-        return org_weight + (1 - org_weight) * delta_org, 1, org_check     
+        return org_weight + (1 - org_weight) * delta_org, 1, org_check
     else:
         # if in direction of observation
         return org_weight - org_weight * delta_org, 0, org_check
@@ -577,9 +622,8 @@ def simulation(args):
                                        args.PROB_E, args.PROB_E_SD)
         pathogens = np.random.choice(2, (args.Y, args.X), replace=True,
                                      p=[1 - args.START_E, args.START_E])
-        agent_tends, agent_columns = init_agents(args.N, args.X,
-                                                      args.S_TEND,
-                                                      args.TEND_SD)
+        agent_tends, agent_columns = init_agents(args.N, args.X, args.S_TEND,
+                                                 args.TEND_SD)
 
         for round_no in range(args.ROUNDS):
             # First, update pathogen/causes
@@ -593,13 +637,12 @@ def simulation(args):
                                              args.PROB_A)
 
             # Placing agents on the board
-            agent_locations, agent_locations2, agent_locations_nos = \
+            agent_locations, agent_locations2, agent_loc_nos = \
                 place_agents(args.X, args.Y, args.N, agent_columns)
 
             # Agents intepretation
             interpret, int_weight = raw_interpret(args.X, args.Y, signal_field,
-                                                  agent_locations_nos, 
-                                                  agent_tends)
+                                                  agent_loc_nos, agent_tends)
 
             # Organization's observation of situation
             observe = np.mean(pathogens)
@@ -623,7 +666,7 @@ def simulation(args):
                                           org_check, org_listening,
                                           args.MIDDLE, int_weight)
             else:
-                org_int = np.zeros((args.Y, args.X))                
+                org_int = np.zeros((args.Y, args.X))
             no_fields_inv = np.sum(org_int)
             repair_field = repair(args.X, args.Y, pathogens, org_int,
                                   args.ORG_DETECT)
@@ -647,21 +690,21 @@ def simulation(args):
                 field_test(args.X, args.Y, trigger_field2, 1)
 
             # Agents update their thresholds
-            agent_tends, fb_f, fb_c, fb_o = feedback(agent_locations_nos,
-                                                          agent_tends,
-                                                          repair_field,
-                                                          interpret,
-                                                          e_field_post,
-                                                          args.D_UP,
-                                                          args.D_DOWN,
-                                                          org_int)
+            agent_tends, fb_f, fb_c, fb_o = feedback_general(agent_loc_nos,
+                                                             agent_tends,
+                                                             repair_field,
+                                                             interpret,
+                                                             e_field_post,
+                                                             args.D_UP,
+                                                             args.D_DOWN,
+                                                             org_int)
 
             org_weight, to_agent, org_check = org_feedback(no_fields_inv,
                                                            no_fields_repaired,
                                                            org_dec, args.D_ORG,
-                                                           org_weight, 
+                                                           org_weight,
                                                            org_listening,
-                                                           error_post, 
+                                                           error_post,
                                                            args.ORG_THRESH,
                                                            org_check,
                                                            args.ORG_CHECK_CHANGE)
@@ -777,6 +820,6 @@ def simulation(args):
     r_a[0, :, 46] = np.sum(failure_roll, axis=0) / args.E
     r_a[0, :, 47] = np.sum(failure_ave, axis=0) / args.E
     r_a[0, :, 48] = np.sum(failure_dummy, axis=0) / args.E
-    
+
 
     return r_a
