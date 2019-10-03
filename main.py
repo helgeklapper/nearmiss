@@ -49,7 +49,7 @@ class Config:
     S_ORG_WEIGHT = 0.5
 
     # Probability that machine (cell) becomes damaged
-    PROB_E = 0.04
+    PROB_E = 0.03
 
     # Standard deviation of latent error
     PROB_E_SD = 0.00
@@ -66,7 +66,7 @@ class Config:
     # Tendency to change threshold upwards and downwards
     D_ORG = 0.15
     D_UP = 0.4
-    D_DOWN = 0.2
+    D_DOWN = 0.05
 
     # Organizational constraint to check errors
     ORG_CHECK = 16
@@ -158,17 +158,17 @@ class Params:
     GRAPH 3 takes care of rounds as IV
     """
     VAR_1 = 8
-    VAR_2 = 14
+    VAR_2 = 22
     if VAR_2 == 2:
         Config.Y = Config.X
         Config.N = int(Config.X * Config.Y * 0.2)
         Config.ORG_CHECK = Config.N / 2
     elif VAR_2 == 14:
-        Config.D_DOWN = Config.D_UP / 2
+        Config.D_DOWN = Config.D_UP / 10
 
     # For integers use arange and for floats use linspace
-    VAR_1_VALUES = np.arange(0.1, 1, 0.4)
-    VAR_2_VALUES = np.arange(0, 0.25, 0.05)
+    VAR_1_VALUES = [0.5] # np.arange(0.1, 1, 0.4)
+    VAR_2_VALUES = [1]
     # np.arange(16,95,16)
 
     VAR_1_NAME = str(COLUMNS[VAR_1][0])

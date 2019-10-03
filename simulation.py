@@ -485,44 +485,27 @@ def feedback(location_idx_sets, tends, repair_field, interpret,
     return tends, fb_failure, fb_comm, fb_omit
 
 
-def feedback_general(location_idx_sets, tends, repair_field, interpret,
-                     failure_field, d_up, d_down, org_int):
+def feedback_general(tends, repair_field, interpret, failure, d_up, d_down,
+                     org_int):
     """
     How individuals adapt their threshold depending on outcome and
     own decision
     """
-    fb_failure = 0
-    fb_comm = 0
-    fb_omit = 0
-    for row, col, agent_no in location_idx_sets:
-        # Did failure happen in my column?
-        failure_column = np.sum(failure_field[:, col])
-        reported = interpret[row, col]
+    # omissions = np.where(org_int==1, error_field, 0)
+    omissions = np.where(interpret == 0, repair_field, 0)
+    fb_omit = int(np.sum(omissions))
+    # print('Omissions \n', omissions)
+    commissions = np.where(interpret == 1, org_int, 0)
+    commissions = np.where(repair_field == 0, commissions, 0)
+    fb_comm = int(np.sum(commissions))
 
-        if failure_column == 0:
-            # Boss check
-            if not org_int[row, col]:
-                continue
-
-            found = repair_field[row, col]
-            if reported == 0:
-                if found == 1:
-                    fb_omit += 1
-            else:
-                if found == 0:
-                    # Org investigates, but finds no problem
-                    fb_comm += 1
-        else:
-            if reported == 0 and failure_field[row, col] == 1:
-                # punishment because impending failure not foreseen
-                fb_failure += 1
     for commit in range(fb_comm):
         tends -= tends * d_down
     for omit in range(fb_omit):
         tends += (1 - tends) * d_up
-    for failure in range(fb_failure):
+    if failure == 1:
         tends += (1 - tends) * d_up
-    return tends, fb_failure, fb_comm, fb_omit
+    return tends, failure, fb_comm, fb_omit
 
 
 def org_feedback(no_fields_inv, no_fields_rep, org_dec, delta_org, org_weight,
@@ -622,7 +605,7 @@ def simulation(args):
                                        args.PROB_E, args.PROB_E_SD)
         pathogens = np.random.choice(2, (args.Y, args.X), replace=True,
                                      p=[1 - args.START_E, args.START_E])
-        agent_tends, agent_columns = init_agents(args.N, args.X, args.S_TEND,
+        ag_tend, agent_columns = init_agents(args.N, args.X, args.S_TEND,
                                                  args.TEND_SD)
 
         for round_no in range(args.ROUNDS):
@@ -642,7 +625,7 @@ def simulation(args):
 
             # Agents intepretation
             interpret, int_weight = raw_interpret(args.X, args.Y, signal_field,
-                                                  agent_loc_nos, agent_tends)
+                                                  agent_loc_nos, ag_tend)
 
             # Organization's observation of situation
             observe = np.mean(pathogens)
@@ -690,14 +673,10 @@ def simulation(args):
                 field_test(args.X, args.Y, trigger_field2, 1)
 
             # Agents update their thresholds
-            agent_tends, fb_f, fb_c, fb_o = feedback_general(agent_loc_nos,
-                                                             agent_tends,
-                                                             repair_field,
-                                                             interpret,
-                                                             e_field_post,
-                                                             args.D_UP,
-                                                             args.D_DOWN,
-                                                             org_int)
+            ag_tend, fb_f, fb_c, fb_o = feedback_general(ag_tend, repair_field,
+                                                         interpret, error_post,
+                                                         args.D_UP,
+                                                         args.D_DOWN, org_int)
 
             org_weight, to_agent, org_check = org_feedback(no_fields_inv,
                                                            no_fields_repaired,
@@ -733,8 +712,8 @@ def simulation(args):
                 failure_roll[e, round_no] = np.mean(failure[e, r2:round_no])
             pathogens_sum[e, round_no] = np.mean(pathogens)
             errors[e, round_no] = np.mean(np.floor(trigger_field))
-            tend_ave[e, round_no] = np.mean(agent_tends)
-            tend_sd[e, round_no] = np.std(agent_tends)
+            tend_ave[e, round_no] = np.mean(ag_tend)
+            tend_sd[e, round_no] = np.std(ag_tend)
             listen_to_agent[e, round_no] = org_listening
             if org_listening == 1:
                 agents_correct[e, round_no] = to_agent
