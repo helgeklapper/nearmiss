@@ -16,7 +16,7 @@ from simulation import simulation, time_left
 
 class Config:
     # Number of Environments sampled
-    E = 2000
+    E = 10000
 
     # Number of rounds
     ROUNDS = 100
@@ -65,8 +65,8 @@ class Config:
 
     # Tendency to change threshold upwards and downwards
     D_ORG = 0.15
-    D_UP = 0.4
-    D_DOWN = 0.05
+    D_UP = 0.2
+    D_DOWN = 0.1
 
     # Organizational constraint to check errors
     ORG_CHECK = 16
@@ -118,32 +118,31 @@ class Params:
                21: ('org_detect', 'Manager detection capability'),
                22: ('middle', 'Divisions'),
                # After here output variables
-               23: ('pathogens', 'Potential errors'),
-               24: ('errors', 'Activated errors'),
-               25: ('tend', 'Tendency to report'),
-               26: ('tend_sd', 'Tendency Std. Dev.'),
-               27: ('reported', 'Agents reporting'),
-               28: ('listened', 'Units investigated'),
-               29: ('repaired', 'Units repaired'),
-               30: ('omission', 'Omission errors'),
-               31: ('commission', 'Commission errors'),
-               32: ('ind_error', 'Average error rate'),
-               33: ('feedback_fail', 'Feedback failure'),
-               34: ('feedback_omit', 'Feedback omission'),
-               35: ('feedback_commit', 'Feedback commission'),
-               36: ('org_check', 'Org. investigation capability'),
-               37: ('org_weight', 'Weight on worker reports'),
-               38: ('org_correct', 'Overall signal correct'),
-               39: ('agents_correct', 'Agent signal correct'),
-               40: ('agents_percentage', 'Accuracy of workers'),
-               41: ('near_miss', 'Near miss rate'),
-               42: ('near_det', 'Near miss detected'),
-               43: ('near_det_ave', 'Average near miss detected'),
-               44: ('near_det_roll', 'Near miss detected'),
-               45: ('failure', 'Failure rate'),
-               46: ('failure_roll', 'Failure rate'),
-               47: ('failure_ave', 'Average failure rate'),
-               48: ('failure_dummy', 'Failed organizations')
+               23: ('errors', 'Activated errors'),
+               24: ('tend', 'Tendency to report'),
+               25: ('tend_sd', 'Tendency Std. Dev.'),
+               26: ('reported', 'Agents reporting'),
+               27: ('listened', 'Units investigated'),
+               28: ('repaired', 'Units repaired'),
+               29: ('omission', 'Omission errors'),
+               30: ('commission', 'Commission errors'),
+               31: ('ind_error', 'Average error rate'),
+               32: ('feedback_fail', 'Feedback failure'),
+               33: ('feedback_omit', 'Feedback omission'),
+               34: ('feedback_commit', 'Feedback commission'),
+               35: ('org_check', 'Org. investigation capability'),
+               36: ('org_weight', 'Weight on worker reports'),
+               37: ('org_correct', 'Overall signal correct'),
+               38: ('agents_correct', 'Agent signal correct'),
+               39: ('agents_percentage', 'Accuracy of workers'),
+               40: ('near_miss', 'Near miss rate'),
+               41: ('near_det', 'Near miss detected'),
+               42: ('near_det_ave', 'Average near miss detected'),
+               43: ('near_det_roll', 'Near miss detected'),
+               44: ('failure', 'Failure rate'),
+               45: ('failure_roll', 'Failure rate'),
+               46: ('failure_ave', 'Average failure rate'),
+               47: ('failure_dummy', 'Failed organizations')
                }
 
     NO_ATTRIBUTES = len(COLUMNS)
@@ -167,7 +166,7 @@ class Params:
         Config.D_DOWN = Config.D_UP / 10
 
     # For integers use arange and for floats use linspace
-    VAR_1_VALUES = [0.5] # np.arange(0.1, 1, 0.4)
+    VAR_1_VALUES = np.arange(0.1, 1, 0.4)
     VAR_2_VALUES = [1]
     # np.arange(16,95,16)
 
