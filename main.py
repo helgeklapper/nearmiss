@@ -16,7 +16,7 @@ from simulation import simulation, time_left
 
 class Config:
     # Number of Environments sampled
-    E = 10000
+    E = 50000
 
     # Number of rounds
     ROUNDS = 100
@@ -65,7 +65,7 @@ class Config:
 
     # Tendency to change threshold upwards and downwards
     D_ORG = 0.15
-    D_UP = 0.2
+    D_UP = 0.025
     D_DOWN = 0.1
 
     # Organizational constraint to check errors
@@ -156,18 +156,19 @@ class Params:
     ROUNDS NOT POSSIBLE AS VARIABLE
     GRAPH 3 takes care of rounds as IV
     """
-    VAR_1 = 8
-    VAR_2 = 22
+    VAR_1 = 14
+    VAR_2 = 8
     if VAR_2 == 2:
         Config.Y = Config.X
         Config.N = int(Config.X * Config.Y * 0.2)
         Config.ORG_CHECK = Config.N / 2
-    elif VAR_2 == 14:
-        Config.D_DOWN = Config.D_UP / 10
+    elif VAR_2 or VAR_1 == 14:
+        pass
+        # Config.D_DOWN = Config.D_UP * 4
 
     # For integers use arange and for floats use linspace
-    VAR_1_VALUES = np.arange(0.1, 1, 0.4)
-    VAR_2_VALUES = [1]
+    VAR_1_VALUES = [0.025, 0.05, 0.075, 0.1]
+    VAR_2_VALUES = [0.5]
     # np.arange(16,95,16)
 
     VAR_1_NAME = str(COLUMNS[VAR_1][0])
