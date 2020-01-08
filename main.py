@@ -16,7 +16,7 @@ from simulation import simulation, time_left
 
 class Config:
     # Number of Environments sampled
-    E = 10
+    E = 100000
 
     # Number of rounds
     ROUNDS = 100
@@ -168,7 +168,7 @@ class Params:
 
     # For integers use arange and for floats use linspace
     VAR_1_VALUES = np.arange(0.1, 1, 0.4)
-    VAR_2_VALUES = [0, 0.1, 0.2, 0.3, 0.4, 0.5]
+    VAR_2_VALUES = [0.4]
     # np.arange(16,95,16)
 
     VAR_1_NAME = str(COLUMNS[VAR_1][0])
