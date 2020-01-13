@@ -160,23 +160,23 @@ def graph2(run_dir, var_1, results, res, dpi, round_no,
 
     plt.ylabel(results)
     if results == 'Errors':
-        values = (23, 24)
+        values = (24, 25)
     elif results == 'Reaction':
-        values = (27, 28, 29)
+        values = (28, 29, 30)
     elif results == 'Error Rate':
-        values = (30, 31)
+        values = (31, 32)
     elif results == 'Feedback Omission':
-        values = (30, 34)
-    elif results == 'Feedback Commission':
         values = (31, 35)
+    elif results == 'Feedback Commission':
+        values = (32, 36)
     elif results == 'Near Miss Detection':
-        values = (41, 42)
+        values = (42, 43)
 
     line_no = 0
     for x in values:
-        if x == 23:
+        if x == 24:
             labels = 'Latent errors'
-        elif x == 24:
+        elif x == 25:
             labels = 'Activated errors'
         else:
             labels = Params.COLUMNS[x][1]
@@ -371,15 +371,15 @@ def graph4(run_dir, var_1, results, res, dpi, round_no, colors="Blues_d"):
     markers = ['v', '^', 'o', 's']
 
     if results == 'Signal':
-        values = (38, 39)
+        values = (39, 40)
         plt.ylabel("Accuracy")
         if Params.VAR_2 == 6:
             plt.xlabel("Ratio latent error")
     elif results == 'Signal2':
-        values = (38, 32)
+        values = (39, 33)
         plt.ylabel("Accuracy")
     elif results == 'Failure':
-        values = (41, 45)
+        values = (42, 46)
         plt.ylabel("Ratio")
         if Params.VAR_2 == 6:
             plt.xlabel("Ratio latent error")
@@ -396,7 +396,7 @@ def graph4(run_dir, var_1, results, res, dpi, round_no, colors="Blues_d"):
                        res[:, round_no - 1, Params.VAR_2])
         Z = np.extract(res[:, round_no - 1, Params.VAR_1] == var_1,
                        res[:, round_no - 1, x])
-        if x == 27:
+        if x == 28:
             Z = 1 - Z
         ax.plot(X, Z, label=labels, linestyle=style, marker=marker, markevery=2)
 
@@ -453,7 +453,7 @@ def create_graphs(run_dir, RES):
     from main import Config, Params
 
     if len(Params.VAR_2_VALUES) > 1:
-        for number in range(23, 49):
+        for number in range(24, 50):
             graph1(run_dir, number, RES, Config.DPI, 1, 'Blues_d')
             if Config.ROUNDS > 9:
                 graph1(run_dir, number, RES, Config.DPI, 10, 'Blues_d')
@@ -469,7 +469,7 @@ def create_graphs(run_dir, RES):
             graph4(run_dir, values, 'Failure', RES, Config.DPI, Config.ROUNDS)
 
     if Config.ROUNDS > 1:
-        for number in range(23, 49):
+        for number in range(24, 50):
             for values in range(len(Params.VAR_2_VALUES)):
                 graph3(run_dir, number, RES, Config.DPI, values, 'Blues_d')
         for values in Params.VAR_1_VALUES:

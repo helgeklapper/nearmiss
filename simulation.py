@@ -160,6 +160,39 @@ def field_test(x, y, field, full_field=1):
     return near_miss, failure, ff2
 
 
+def field_test_ind(x, y, field, full_field=1):
+    """
+    Test whether failure occurs
+    """
+    ffield = np.zeros((y, x))
+    ffield[0, :] = field[0, :]
+    ff2 = np.zeros((y, x))
+    field = np.floor(field)
+    failure = 0
+    near_miss = 0
+
+    systems = np.sum(field, axis=0)
+    # print('systems', systems)
+    failure = np.any(systems==y)
+    # print('failure', failure)
+
+    if failure == 0 and np.any(systems==y-1) == 1:
+        near_miss = 1
+
+    for row in range(x):
+        if systems[row] == y:
+            ff2[:, row] = np.ones((y))
+
+    return near_miss, failure, ff2
+
+
+def which_test(linear, x, y, field, full_field=1):
+    if linear == 0:
+        near_miss, failure, ff2 = field_test(x, y, field, full_field)
+    elif linear == 1:
+        near_miss, failure, ff2 = field_test_ind(x, y, field, full_field)
+    return near_miss, failure, ff2
+
 def field_test_linear(x, y, field, mean_pathogens):
     """
     Test whether failure occurs, but ignoring percolation
@@ -615,7 +648,8 @@ def simulation(args):
             omit = np.sum(np.multiply(ag_non_report, pathogens))
             commit = np.sum(np.multiply(interpret, 1 - pathogens))
             no_fields_report = np.sum(interpret)
-            nm_theory, error_theory, t_field = field_test(args.X, args.Y, pathogens, 0)
+            nm_theory, error_theory, t_field = which_test(args.LINEAR, args.X, args.Y, pathogens, 0)
+            # nm_theory, error_theory, t_field = field_test(args.X, args.Y, pathogens, 0)
 
             # who does the organization listen to this round?
             org_listening = org_listen(org_weight)
@@ -642,7 +676,8 @@ def simulation(args):
             if np.any(repair_field):
                 pathogens = update_cause_field(pathogens, repair_field)
                 nm_theory_post, error_theory_post, t_field = \
-                    field_test(args.X, args.Y, pathogens, 0)
+                    which_test(args.LINEAR, args.X, args.Y, pathogens, 0)
+                    # field_test(args.X, args.Y, pathogens, 0)
                 trigger_field2 = pathogen_trigger(args.X, args.Y, pathogens,
                                                   args.PROB_A)
             else:
@@ -650,7 +685,8 @@ def simulation(args):
                 trigger_field2 = trigger_field
 
             nm_post, error_post, e_field_post = \
-                field_test(args.X, args.Y, trigger_field2, 1)
+                which_test(args.LINEAR, args.X, args.Y, trigger_field2, 1)
+                # field_test(args.X, args.Y, trigger_field2, 1)
 
             # Agents update their thresholds
             agent_tends, fb_f, fb_c, fb_o = feedback(agent_locations_nos,
@@ -755,34 +791,35 @@ def simulation(args):
     r_a[0, :, 20] = args.RESET
     r_a[0, :, 21] = args.ORG_DETECT
     r_a[0, :, 22] = args.MIDDLE
+    r_a[0, :, 23] = args.LINEAR
 
     # Fill the whole column in 1 go
-    r_a[0, :, 23] = np.sum(pathogens_sum, axis=0) / args.E
-    r_a[0, :, 24] = np.sum(errors, axis=0) / args.E
-    r_a[0, :, 25] = np.sum(tend_ave, axis=0) / args.E
-    r_a[0, :, 26] = np.sum(tend_sd, axis=0) / args.E
-    r_a[0, :, 27] = np.sum(pct_reported, axis=0) / args.E
-    r_a[0, :, 28] = np.nanmean(pct_listened, axis=0)
-    r_a[0, :, 29] = np.sum(pct_repaired, axis=0) / args.E
-    r_a[0, :, 30] = np.sum(omission, axis=0) / args.E
-    r_a[0, :, 31] = np.sum(commission, axis=0) / args.E
-    r_a[0, :, 32] = np.sum(ind_error, axis=0) / args.E
-    r_a[0, :, 33] = np.sum(feedback_fail, axis=0) / args.E
-    r_a[0, :, 34] = np.sum(feedback_omit, axis=0) / args.E
-    r_a[0, :, 35] = np.sum(feedback_commit, axis=0) / args.E
-    r_a[0, :, 36] = np.sum(org_check_mat, axis=0) / args.E
-    r_a[0, :, 37] = np.sum(org_weight_mat, axis=0) / args.E
-    r_a[0, :, 38] = np.nanmean(org_correct, axis=00)
-    r_a[0, :, 39] = np.nanmean(agents_correct, axis=00)
-    r_a[0, :, 40] = np.nanmean(agents_percentage, axis=00)
-    r_a[0, :, 41] = np.nanmean(near_miss, axis=00)
-    r_a[0, :, 42] = np.nanmean(near_det, axis=00)
-    r_a[0, :, 43] = np.nanmean(near_det_ave, axis=00)
-    r_a[0, :, 44] = np.nanmean(near_det_roll, axis=00)
-    r_a[0, :, 45] = np.sum(failure, axis=0) / args.E
-    r_a[0, :, 46] = np.sum(failure_roll, axis=0) / args.E
-    r_a[0, :, 47] = np.sum(failure_ave, axis=0) / args.E
-    r_a[0, :, 48] = np.sum(failure_dummy, axis=0) / args.E
+    r_a[0, :, 24] = np.sum(pathogens_sum, axis=0) / args.E
+    r_a[0, :, 25] = np.sum(errors, axis=0) / args.E
+    r_a[0, :, 26] = np.sum(tend_ave, axis=0) / args.E
+    r_a[0, :, 27] = np.sum(tend_sd, axis=0) / args.E
+    r_a[0, :, 28] = np.sum(pct_reported, axis=0) / args.E
+    r_a[0, :, 29] = np.nanmean(pct_listened, axis=0)
+    r_a[0, :, 30] = np.sum(pct_repaired, axis=0) / args.E
+    r_a[0, :, 31] = np.sum(omission, axis=0) / args.E
+    r_a[0, :, 32] = np.sum(commission, axis=0) / args.E
+    r_a[0, :, 33] = np.sum(ind_error, axis=0) / args.E
+    r_a[0, :, 34] = np.sum(feedback_fail, axis=0) / args.E
+    r_a[0, :, 35] = np.sum(feedback_omit, axis=0) / args.E
+    r_a[0, :, 36] = np.sum(feedback_commit, axis=0) / args.E
+    r_a[0, :, 37] = np.sum(org_check_mat, axis=0) / args.E
+    r_a[0, :, 38] = np.sum(org_weight_mat, axis=0) / args.E
+    r_a[0, :, 39] = np.nanmean(org_correct, axis=00)
+    r_a[0, :, 40] = np.nanmean(agents_correct, axis=00)
+    r_a[0, :, 41] = np.nanmean(agents_percentage, axis=00)
+    r_a[0, :, 42] = np.nanmean(near_miss, axis=00)
+    r_a[0, :, 43] = np.nanmean(near_det, axis=00)
+    r_a[0, :, 44] = np.nanmean(near_det_ave, axis=00)
+    r_a[0, :, 45] = np.nanmean(near_det_roll, axis=00)
+    r_a[0, :, 46] = np.sum(failure, axis=0) / args.E
+    r_a[0, :, 47] = np.sum(failure_roll, axis=0) / args.E
+    r_a[0, :, 48] = np.sum(failure_ave, axis=0) / args.E
+    r_a[0, :, 49] = np.sum(failure_dummy, axis=0) / args.E
 
 
     return r_a

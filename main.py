@@ -117,33 +117,34 @@ class Params:
                20: ('reset', 'Reset after failure'),
                21: ('org_detect', 'Manager detection capability'),
                22: ('middle', 'Divisions'),
+               23: ('linear', 'Independence'),
                # After here output variables
-               23: ('pathogens', 'Potential errors'),
-               24: ('errors', 'Activated errors'),
-               25: ('tend', 'Tendency to report'),
-               26: ('tend_sd', 'Tendency Std. Dev.'),
-               27: ('reported', 'Agents reporting'),
-               28: ('listened', 'Units investigated'),
-               29: ('repaired', 'Units repaired'),
-               30: ('omission', 'Omission errors'),
-               31: ('commission', 'Commission errors'),
-               32: ('ind_error', 'Average error rate'),
-               33: ('feedback_fail', 'Feedback failure'),
-               34: ('feedback_omit', 'Feedback omission'),
-               35: ('feedback_commit', 'Feedback commission'),
-               36: ('org_check', 'Org. investigation capability'),
-               37: ('org_weight', 'Weight on worker reports'),
-               38: ('org_correct', 'Overall signal correct'),
-               39: ('agents_correct', 'Agent signal correct'),
-               40: ('agents_percentage', 'Accuracy of workers'),
-               41: ('near_miss', 'Near miss rate'),
-               42: ('near_det', 'Near miss detected'),
-               43: ('near_det_ave', 'Average near miss detected'),
-               44: ('near_det_roll', 'Near miss detected'),
-               45: ('failure', 'Failure rate'),
-               46: ('failure_roll', 'Failure rate'),
-               47: ('failure_ave', 'Average failure rate'),
-               48: ('failure_dummy', 'Failed organizations')
+               24: ('pathogens', 'Potential errors'),
+               25: ('errors', 'Activated errors'),
+               26: ('tend', 'Tendency to report'),
+               27: ('tend_sd', 'Tendency Std. Dev.'),
+               28: ('reported', 'Agents reporting'),
+               29: ('listened', 'Units investigated'),
+               30: ('repaired', 'Units repaired'),
+               31: ('omission', 'Omission errors'),
+               32: ('commission', 'Commission errors'),
+               33: ('ind_error', 'Average error rate'),
+               34: ('feedback_fail', 'Feedback failure'),
+               35: ('feedback_omit', 'Feedback omission'),
+               36: ('feedback_commit', 'Feedback commission'),
+               37: ('org_check', 'Org. investigation capability'),
+               38: ('org_weight', 'Weight on worker reports'),
+               39: ('org_correct', 'Overall signal correct'),
+               40: ('agents_correct', 'Agent signal correct'),
+               41: ('agents_percentage', 'Accuracy of workers'),
+               42: ('near_miss', 'Near miss rate'),
+               43: ('near_det', 'Near miss detected'),
+               44: ('near_det_ave', 'Average near miss detected'),
+               45: ('near_det_roll', 'Near miss detected'),
+               46: ('failure', 'Failure rate'),
+               47: ('failure_roll', 'Failure rate'),
+               48: ('failure_ave', 'Average failure rate'),
+               49: ('failure_dummy', 'Failed organizations')
                }
 
     NO_ATTRIBUTES = len(COLUMNS)
@@ -157,7 +158,7 @@ class Params:
     ROUNDS NOT POSSIBLE AS VARIABLE
     GRAPH 3 takes care of rounds as IV
     """
-    VAR_1 = 8
+    VAR_1 = 23
     VAR_2 = 1
     if VAR_2 == 2:
         Config.Y = Config.X
@@ -167,8 +168,8 @@ class Params:
         Config.D_DOWN = Config.D_UP / 2
 
     # For integers use arange and for floats use linspace
-    VAR_1_VALUES = np.arange(0.1, 1, 0.4)
-    VAR_2_VALUES = [32, 64, 96, 128, 160]
+    VAR_1_VALUES = [0, 1]
+    VAR_2_VALUES = [64]
     # np.arange(16,95,16)
     # np.arange(0.1, 1, 0.4)
     VAR_1_NAME = str(COLUMNS[VAR_1][0])
@@ -210,6 +211,7 @@ def show_first_arguments(first_args):
           first_args.D_UP, first_args.D_DOWN)
     print('Org. updating                                :', first_args.D_ORG)
     print('Reset after failure                          :', first_args.RESET)
+    print('Indepence                                    :', first_args.LINEAR)
     print()
 
 
