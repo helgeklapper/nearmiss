@@ -14,9 +14,49 @@ def init_path_field(x, y, pr_e_mean, pre_e_sd):
     """
     Create field that on average has mean latent error prob.
     """
-    alpha = ((1 - pr_e_mean) / pre_e_sd ** 2 - (1 / pr_e_mean)) * pr_e_mean ** 2
-    beta = alpha * ((1 / pr_e_mean) - 1)
-    return np.random.beta(alpha, beta, (y, x))
+    if pre_e_sd > 0:
+        alpha = ((1 - pr_e_mean) / pre_e_sd ** 2 - (1 / pr_e_mean)) * pr_e_mean ** 2
+        beta = alpha * ((1 / pr_e_mean) - 1)
+        return np.random.beta(alpha, beta, (y, x))
+    else:
+        return np.ones((y, x)) * pr_e_mean
+
+
+def update_path_field(x, y, pr_e_field, field):
+    """
+    Update field to take into account added because of infected neighbors
+    """
+    new_pr_field = np.ones([y, x])
+    # print('Error prob field\n', pr_e_field)
+    # print('Latent error field\n', field)
+    for col in range(x):
+        for row in range(y):
+            # Check all possible neighbors
+            # print('Position', col, row)
+            if col == 0:
+                top = col
+                bottom = col + 1
+            elif col == x:
+                top = col - 1
+                bottom = col
+            else:
+                top = col - 1
+                bottom = col + 1
+            if row == 0:
+                left = row
+                right = row + 1
+            elif row == y:
+                left = row - 1
+                right = row
+            else:
+                left = row - 1
+                right = row + 1
+            # print(bottom, top, left, right)
+            # Sum all neighbors that have an (latent) error
+            sum_errors = np.sum(field[left:right+1, top:bottom+1]) + 1
+            new_pr_field[row, col] = pr_e_field[row, col] * sum_errors
+            # print(sum_errors)
+    return new_pr_field
 
 
 def place_errors(x, y, field, pr_e_field, reset, failure):
@@ -173,10 +213,10 @@ def field_test_ind(x, y, field, full_field=1):
 
     systems = np.sum(field, axis=0)
     # print('systems', systems)
-    failure = np.any(systems==y)
+    failure = np.any(systems == y)
     # print('failure', failure)
 
-    if failure == 0 and np.any(systems==y-1) == 1:
+    if failure == 0 and np.any(systems == y-1) == 1:
         near_miss = 1
 
     for row in range(x):
@@ -192,6 +232,7 @@ def which_test(linear, x, y, field, full_field=1):
     elif linear == 1:
         near_miss, failure, ff2 = field_test_ind(x, y, field, full_field)
     return near_miss, failure, ff2
+
 
 def field_test_linear(x, y, field, mean_pathogens):
     """
@@ -607,23 +648,28 @@ def simulation(args):
 
     for e in range(args.E):
         """Initializing each run"""
+        if args.LINEAR == 1:
+            prob_e = args.PROB_E * 1.8
+        else:
+            prob_e = args.PROB_E
         org_weight = args.S_ORG_WEIGHT
         org_check = args.ORG_CHECK
         error_post = 0
         failure_d = 0
         failure_a = 0
         prob_e_field = init_path_field(args.X, args.Y,
-                                       args.PROB_E, args.PROB_E_SD)
+                                       prob_e, args.PROB_E_SD)
         pathogens = np.random.choice(2, (args.Y, args.X), replace=True,
                                      p=[1 - args.START_E, args.START_E])
-        agent_tends, agent_columns = init_agents(args.N, args.X,
-                                                      args.S_TEND,
-                                                      args.TEND_SD)
+        agent_tends, agent_columns = init_agents(args.N, args.X, args.S_TEND,
+                                                 args.TEND_SD)
 
         for round_no in range(args.ROUNDS):
             # First, update pathogen/causes
+            updated_e_field = update_path_field(args.X, args.Y, prob_e_field,
+                                                pathogens)
             pathogens = place_errors(args.X, args.Y, pathogens,
-                                     prob_e_field, args.RESET, error_post)
+                                     updated_e_field, args.RESET, error_post)
 
             # Signals and Triggers are activated
             signal_field = pathogen_signals(args.X, args.Y, pathogens,
@@ -648,7 +694,8 @@ def simulation(args):
             omit = np.sum(np.multiply(ag_non_report, pathogens))
             commit = np.sum(np.multiply(interpret, 1 - pathogens))
             no_fields_report = np.sum(interpret)
-            nm_theory, error_theory, t_field = which_test(args.LINEAR, args.X, args.Y, pathogens, 0)
+            nm_theory, error_theory, t_field = which_test(args.LINEAR, args.X,
+                                                          args.Y, pathogens, 0)
             # nm_theory, error_theory, t_field = field_test(args.X, args.Y, pathogens, 0)
 
             # who does the organization listen to this round?
@@ -772,7 +819,7 @@ def simulation(args):
     r_a[0, :, 1] = args.N
     r_a[0, :, 2] = args.X
     r_a[0, :, 3] = args.Y
-    r_a[0, :, 4] = args.PROB_E
+    r_a[0, :, 4] = prob_e
     r_a[0, :, 5] = args.PROB_E_SD
     r_a[0, :, 6] = args.PROB_A
     r_a[0, :, 7] = args.START_E
