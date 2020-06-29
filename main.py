@@ -16,7 +16,8 @@ from simulation import simulation, time_left
 
 class Config:
     # Number of Environments sampled
-    E = 20000
+
+    E = 5000
 
     # Number of rounds
     ROUNDS = 100
@@ -49,10 +50,10 @@ class Config:
     S_ORG_WEIGHT = 0.5
 
     # Probability that machine (cell) becomes damaged
-    PROB_E = 0.03
+    PROB_E = 0.01
 
     # Standard deviation of latent error
-    PROB_E_SD = 0.03
+    PROB_E_SD = 0.00
 
     # Probability that if machine is damaged, machine breaks down
     PROB_A = 1
@@ -124,7 +125,7 @@ class Params:
                # After here output variables
                24: ('pathogens', 'Potential errors'),
                25: ('errors', 'Activated errors'),
-               26: ('tend', 'Tendency to report'),
+               26: ('tend', 'Reporting climate'),
                27: ('tend_sd', 'Tendency Std. Dev.'),
                28: ('reported', 'Agents reporting'),
                29: ('listened', 'Units investigated'),
@@ -161,8 +162,10 @@ class Params:
     ROUNDS NOT POSSIBLE AS VARIABLE
     GRAPH 3 takes care of rounds as IV
     """
-    VAR_1 = 22
-    VAR_2 = 8
+
+    VAR_1 = 8
+    VAR_2 = 4
+
     if VAR_2 == 2:
         Config.Y = Config.X
         Config.N = int(Config.X * Config.Y * 0.2)
@@ -171,8 +174,10 @@ class Params:
         Config.D_DOWN = Config.D_UP / 2
 
     # For integers use arange and for floats use linspace
-    VAR_1_VALUES = [1, 4, 16]
-    VAR_2_VALUES = np.arange(0.1, 1, 0.1)
+
+    VAR_1_VALUES = [0.1, 0.5, 0.9]
+    VAR_2_VALUES = [0.01]
+
     # np.arange(16,95,16)
     # np.arange(0.1, 1, 0.4)
     VAR_1_NAME = str(COLUMNS[VAR_1][0])
@@ -290,7 +295,7 @@ def main_loop_multi():
     instances = len(Params.VAR_1_VALUES) * len(Params.VAR_2_VALUES)
     print('Time: ', datetime.datetime.now().replace(microsecond=0))
     print('Instances', instances)
-    with Pool(processes=6) as pool:
+    with Pool(processes=5) as pool:
         pool.map(wrapper, argument_sets)
 
     RES = np.zeros((len(argument_sets), Config.ROUNDS, Params.NO_ATTRIBUTES))
