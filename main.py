@@ -16,7 +16,7 @@ from simulation import simulation, time_left
 
 class Config:
     # Number of Environments sampled
-    E = 10000
+    E = 20000
 
     # Number of rounds
     ROUNDS = 100
@@ -85,6 +85,9 @@ class Config:
 
     # Use divisional checks instead of overall
     MIDDLE = 1
+
+    # Interdependence of subsystems
+    LINEAR = 0
 
     # When failure happens, are all errors reset?
     RESET = 0
@@ -158,8 +161,8 @@ class Params:
     ROUNDS NOT POSSIBLE AS VARIABLE
     GRAPH 3 takes care of rounds as IV
     """
-    VAR_1 = 23
-    VAR_2 = 1
+    VAR_1 = 22
+    VAR_2 = 8
     if VAR_2 == 2:
         Config.Y = Config.X
         Config.N = int(Config.X * Config.Y * 0.2)
@@ -168,8 +171,8 @@ class Params:
         Config.D_DOWN = Config.D_UP / 2
 
     # For integers use arange and for floats use linspace
-    VAR_1_VALUES = [0, 1]
-    VAR_2_VALUES = [64]
+    VAR_1_VALUES = [1, 4, 16]
+    VAR_2_VALUES = np.arange(0.1, 1, 0.1)
     # np.arange(16,95,16)
     # np.arange(0.1, 1, 0.4)
     VAR_1_NAME = str(COLUMNS[VAR_1][0])
