@@ -16,8 +16,7 @@ from simulation import simulation, time_left
 
 class Config:
     # Number of Environments sampled
-
-    E = 5000
+    E = 1000
 
     # Number of rounds
     ROUNDS = 100
@@ -90,6 +89,9 @@ class Config:
     # Interdependence of subsystems
     LINEAR = 0
 
+    # Coupling
+    COUPLING = 1
+
     # When failure happens, are all errors reset?
     RESET = 0
 
@@ -122,33 +124,34 @@ class Params:
                21: ('org_detect', 'Manager detection capability'),
                22: ('middle', 'Divisions'),
                23: ('linear', 'Independence'),
+               24: ('coupling', 'Tight Coupling'),
                # After here output variables
-               24: ('pathogens', 'Potential errors'),
-               25: ('errors', 'Activated errors'),
-               26: ('tend', 'Reporting climate'),
-               27: ('tend_sd', 'Tendency Std. Dev.'),
-               28: ('reported', 'Agents reporting'),
-               29: ('listened', 'Units investigated'),
-               30: ('repaired', 'Units repaired'),
-               31: ('omission', 'Omission errors'),
-               32: ('commission', 'Commission errors'),
-               33: ('ind_error', 'Average error rate'),
-               34: ('feedback_fail', 'Feedback failure'),
-               35: ('feedback_omit', 'Feedback omission'),
-               36: ('feedback_commit', 'Feedback commission'),
-               37: ('org_check', 'Org. investigation capability'),
-               38: ('org_weight', 'Weight on worker reports'),
-               39: ('org_correct', 'Overall signal correct'),
-               40: ('agents_correct', 'Agent signal correct'),
-               41: ('agents_percentage', 'Accuracy of workers'),
-               42: ('near_miss', 'Near miss rate'),
-               43: ('near_det', 'Near miss detected'),
-               44: ('near_det_ave', 'Average near miss detected'),
-               45: ('near_det_roll', 'Near miss detected'),
-               46: ('failure', 'Failure rate'),
-               47: ('failure_roll', 'Failure rate'),
-               48: ('failure_ave', 'Average failure rate'),
-               49: ('failure_dummy', 'Failed organizations')
+               25: ('pathogens', 'Potential errors'),
+               26: ('errors', 'Activated errors'),
+               27: ('tend', 'Reporting climate'),
+               28: ('tend_sd', 'Tendency Std. Dev.'),
+               29: ('reported', 'Agents reporting'),
+               30: ('listened', 'Units investigated'),
+               31: ('repaired', 'Units repaired'),
+               32: ('omission', 'Omission errors'),
+               33: ('commission', 'Commission errors'),
+               34: ('ind_error', 'Average error rate'),
+               35: ('feedback_fail', 'Feedback failure'),
+               36: ('feedback_omit', 'Feedback omission'),
+               37: ('feedback_commit', 'Feedback commission'),
+               38: ('org_check', 'Org. investigation capability'),
+               39: ('org_weight', 'Weight on worker reports'),
+               40: ('org_correct', 'Overall signal correct'),
+               41: ('agents_correct', 'Agent signal correct'),
+               42: ('agents_percentage', 'Accuracy of workers'),
+               43: ('near_miss', 'Near miss rate'),
+               44: ('near_det', 'Near miss detected'),
+               45: ('near_det_ave', 'Average near miss detected'),
+               46: ('near_det_roll', 'Near miss detected'),
+               47: ('failure', 'Failure rate'),
+               48: ('failure_roll', 'Failure rate'),
+               49: ('failure_ave', 'Average failure rate'),
+               50: ('failure_dummy', 'Failed organizations')
                }
 
     NO_ATTRIBUTES = len(COLUMNS)
@@ -163,8 +166,8 @@ class Params:
     GRAPH 3 takes care of rounds as IV
     """
 
-    VAR_1 = 8
-    VAR_2 = 4
+    VAR_1 = 23
+    VAR_2 = 8
 
     if VAR_2 == 2:
         Config.Y = Config.X
@@ -175,8 +178,8 @@ class Params:
 
     # For integers use arange and for floats use linspace
 
-    VAR_1_VALUES = [0.1, 0.5, 0.9]
-    VAR_2_VALUES = [0.01]
+    VAR_1_VALUES = [0, 1]
+    VAR_2_VALUES = np.linspace(0.1, 0.9, num=9)
 
     # np.arange(16,95,16)
     # np.arange(0.1, 1, 0.4)
@@ -295,7 +298,7 @@ def main_loop_multi():
     instances = len(Params.VAR_1_VALUES) * len(Params.VAR_2_VALUES)
     print('Time: ', datetime.datetime.now().replace(microsecond=0))
     print('Instances', instances)
-    with Pool(processes=5) as pool:
+    with Pool(processes=6) as pool:
         pool.map(wrapper, argument_sets)
 
     RES = np.zeros((len(argument_sets), Config.ROUNDS, Params.NO_ATTRIBUTES))

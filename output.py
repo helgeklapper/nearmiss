@@ -453,7 +453,7 @@ def create_graphs(run_dir, RES):
     from main import Config, Params
 
     if len(Params.VAR_2_VALUES) > 1:
-        for number in range(24, 50):
+        for number in range(25, 51):
             graph1(run_dir, number, RES, Config.DPI, 1, 'Blues_d')
             if Config.ROUNDS > 9:
                 graph1(run_dir, number, RES, Config.DPI, 10, 'Blues_d')
@@ -469,7 +469,7 @@ def create_graphs(run_dir, RES):
             graph4(run_dir, values, 'Failure', RES, Config.DPI, Config.ROUNDS)
 
     if Config.ROUNDS > 1:
-        for number in range(24, 50):
+        for number in range(25, 51):
             for values in range(len(Params.VAR_2_VALUES)):
                 graph3(run_dir, number, RES, Config.DPI, values, 'Blues_d')
         for values in Params.VAR_1_VALUES:

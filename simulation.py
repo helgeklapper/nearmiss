@@ -8,7 +8,6 @@ import os
 import numpy as np
 
 
-# TODO: Place errors with spreading errors
 # TODO: reverse signs of weight on agents
 def init_path_field(x, y, pr_e_mean, pre_e_sd):
     """
@@ -22,13 +21,15 @@ def init_path_field(x, y, pr_e_mean, pre_e_sd):
         return np.ones((y, x)) * pr_e_mean
 
 
-def update_path_field(x, y, pr_e_field, field):
+def update_path_field(x, y, pr_e_field, field, coupling):
     """
     Update field to take into account added because of infected neighbors
     """
     new_pr_field = np.ones([y, x])
     # print('Error prob field\n', pr_e_field)
     # print('Latent error field\n', field)
+    if coupling == 0:
+        return pr_e_field
     for col in range(x):
         for row in range(y):
             # Check all possible neighbors
@@ -408,7 +409,8 @@ def org_decision(org_listening, observe, agent_report):
         return observe
 
 
-def org_investigate(x, y, interpret, org_check, org_listening, divisions, int_w):
+def org_investigate(x, y, interpret, org_check, org_listening, divisions,
+                    int_w):
     """
     Function describing how organization aggregates reports from agents.
     Assuming that organization actually investigaes.
@@ -561,7 +563,8 @@ def feedback(location_idx_sets, tends, repair_field, interpret,
 
 
 def org_feedback(no_fields_inv, no_fields_rep, org_dec, delta_org, org_weight,
-                 org_listening, failure, org_thresh, org_check, org_check_change):
+                 org_listening, failure, org_thresh, org_check,
+                 org_check_change):
     """
     Update organizational weighting and threshold to react to problem
     """
@@ -649,7 +652,7 @@ def simulation(args):
     for e in range(args.E):
         """Initializing each run"""
         if args.LINEAR == 1:
-            prob_e = args.PROB_E * 1.8
+            prob_e = args.PROB_E
         else:
             prob_e = args.PROB_E
         org_weight = args.S_ORG_WEIGHT
@@ -667,7 +670,7 @@ def simulation(args):
         for round_no in range(args.ROUNDS):
             # First, update pathogen/causes
             updated_e_field = update_path_field(args.X, args.Y, prob_e_field,
-                                                pathogens)
+                                                pathogens, args.COUPLING)
             pathogens = place_errors(args.X, args.Y, pathogens,
                                      updated_e_field, args.RESET, error_post)
 
@@ -839,34 +842,35 @@ def simulation(args):
     r_a[0, :, 21] = args.ORG_DETECT
     r_a[0, :, 22] = args.MIDDLE
     r_a[0, :, 23] = args.LINEAR
+    r_a[0, :, 24] = args.COUPLING
 
     # Fill the whole column in 1 go
-    r_a[0, :, 24] = np.sum(pathogens_sum, axis=0) / args.E
-    r_a[0, :, 25] = np.sum(errors, axis=0) / args.E
-    r_a[0, :, 26] = np.sum(tend_ave, axis=0) / args.E
-    r_a[0, :, 27] = np.sum(tend_sd, axis=0) / args.E
-    r_a[0, :, 28] = np.sum(pct_reported, axis=0) / args.E
-    r_a[0, :, 29] = np.nanmean(pct_listened, axis=0)
-    r_a[0, :, 30] = np.sum(pct_repaired, axis=0) / args.E
-    r_a[0, :, 31] = np.sum(omission, axis=0) / args.E
-    r_a[0, :, 32] = np.sum(commission, axis=0) / args.E
-    r_a[0, :, 33] = np.sum(ind_error, axis=0) / args.E
-    r_a[0, :, 34] = np.sum(feedback_fail, axis=0) / args.E
-    r_a[0, :, 35] = np.sum(feedback_omit, axis=0) / args.E
-    r_a[0, :, 36] = np.sum(feedback_commit, axis=0) / args.E
-    r_a[0, :, 37] = np.sum(org_check_mat, axis=0) / args.E
-    r_a[0, :, 38] = np.sum(org_weight_mat, axis=0) / args.E
-    r_a[0, :, 39] = np.nanmean(org_correct, axis=00)
-    r_a[0, :, 40] = np.nanmean(agents_correct, axis=00)
-    r_a[0, :, 41] = np.nanmean(agents_percentage, axis=00)
-    r_a[0, :, 42] = np.nanmean(near_miss, axis=00)
-    r_a[0, :, 43] = np.nanmean(near_det, axis=00)
-    r_a[0, :, 44] = np.nanmean(near_det_ave, axis=00)
-    r_a[0, :, 45] = np.nanmean(near_det_roll, axis=00)
-    r_a[0, :, 46] = np.sum(failure, axis=0) / args.E
-    r_a[0, :, 47] = np.sum(failure_roll, axis=0) / args.E
-    r_a[0, :, 48] = np.sum(failure_ave, axis=0) / args.E
-    r_a[0, :, 49] = np.sum(failure_dummy, axis=0) / args.E
+    r_a[0, :, 25] = np.sum(pathogens_sum, axis=0) / args.E
+    r_a[0, :, 26] = np.sum(errors, axis=0) / args.E
+    r_a[0, :, 27] = np.sum(tend_ave, axis=0) / args.E
+    r_a[0, :, 28] = np.sum(tend_sd, axis=0) / args.E
+    r_a[0, :, 29] = np.sum(pct_reported, axis=0) / args.E
+    r_a[0, :, 30] = np.nanmean(pct_listened, axis=0)
+    r_a[0, :, 31] = np.sum(pct_repaired, axis=0) / args.E
+    r_a[0, :, 32] = np.sum(omission, axis=0) / args.E
+    r_a[0, :, 33] = np.sum(commission, axis=0) / args.E
+    r_a[0, :, 34] = np.sum(ind_error, axis=0) / args.E
+    r_a[0, :, 35] = np.sum(feedback_fail, axis=0) / args.E
+    r_a[0, :, 36] = np.sum(feedback_omit, axis=0) / args.E
+    r_a[0, :, 37] = np.sum(feedback_commit, axis=0) / args.E
+    r_a[0, :, 38] = np.sum(org_check_mat, axis=0) / args.E
+    r_a[0, :, 39] = np.sum(org_weight_mat, axis=0) / args.E
+    r_a[0, :, 40] = np.nanmean(org_correct, axis=00)
+    r_a[0, :, 41] = np.nanmean(agents_correct, axis=00)
+    r_a[0, :, 42] = np.nanmean(agents_percentage, axis=00)
+    r_a[0, :, 43] = np.nanmean(near_miss, axis=00)
+    r_a[0, :, 44] = np.nanmean(near_det, axis=00)
+    r_a[0, :, 45] = np.nanmean(near_det_ave, axis=00)
+    r_a[0, :, 46] = np.nanmean(near_det_roll, axis=00)
+    r_a[0, :, 47] = np.sum(failure, axis=0) / args.E
+    r_a[0, :, 48] = np.sum(failure_roll, axis=0) / args.E
+    r_a[0, :, 49] = np.sum(failure_ave, axis=0) / args.E
+    r_a[0, :, 50] = np.sum(failure_dummy, axis=0) / args.E
 
 
     return r_a
