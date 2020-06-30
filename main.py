@@ -16,7 +16,7 @@ from simulation import simulation, time_left
 
 class Config:
     # Number of Environments sampled
-    E = 1000
+    E = 500
 
     # Number of rounds
     ROUNDS = 100
@@ -166,8 +166,8 @@ class Params:
     GRAPH 3 takes care of rounds as IV
     """
 
-    VAR_1 = 23
-    VAR_2 = 8
+    VAR_1 = 8
+    VAR_2 = 7
 
     if VAR_2 == 2:
         Config.Y = Config.X
@@ -178,8 +178,8 @@ class Params:
 
     # For integers use arange and for floats use linspace
 
-    VAR_1_VALUES = [0, 1]
-    VAR_2_VALUES = np.linspace(0.1, 0.9, num=9)
+    VAR_1_VALUES = [0.2, 0.5, 0.8]
+    VAR_2_VALUES = np.linspace(0.0, 0.4, num=9)
 
     # np.arange(16,95,16)
     # np.arange(0.1, 1, 0.4)
@@ -298,7 +298,7 @@ def main_loop_multi():
     instances = len(Params.VAR_1_VALUES) * len(Params.VAR_2_VALUES)
     print('Time: ', datetime.datetime.now().replace(microsecond=0))
     print('Instances', instances)
-    with Pool(processes=6) as pool:
+    with Pool(processes=7) as pool:
         pool.map(wrapper, argument_sets)
 
     RES = np.zeros((len(argument_sets), Config.ROUNDS, Params.NO_ATTRIBUTES))
