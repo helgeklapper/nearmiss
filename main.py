@@ -16,10 +16,10 @@ from simulation import simulation, time_left
 
 class Config:
     # Number of Environments sampled
-    E = 500
+    E = 10000
 
     # Number of rounds
-    ROUNDS = 100
+    ROUNDS = 1
 
     # Number of parts/machines/divisions (columns)
     X = 32
@@ -108,14 +108,14 @@ class Params:
                5: ('prob_e_sd', 'Probability of pot. error deviation'),
                6: ('prob_a', 'Probability of activated error'),
                7: ('start_e', 'Initial error rate'),
-               8: ('s_tend', 'Initial tendency to report'),
+               8: ('s_tend', 'Initial reporting climate'),
                9: ('thresh_sd', 'Starting threshold variance'),
                10: ('noise', 'Noise in agent signal'),
                11: ('normal', 'Noise distribution'),
                12: ('s_org_weight', 'Weight on worker reports'),
                13: ('org_thresh', 'Org. accept threshold'),
-               14: ('d_up', 'Commission Feedback'),
-               15: ('d_down', 'Omission Feedback'),
+               14: ('d_up', 'Omission Feedback'),
+               15: ('d_down', 'Commission Feedback'),
                16: ('d_org', 'Organizational Reactivity'),
                17: ('dec_stru', 'Decision Structure'),
                18: ('org_check', 'Org. constraint'),
@@ -166,7 +166,7 @@ class Params:
     GRAPH 3 takes care of rounds as IV
     """
 
-    VAR_1 = 8
+    VAR_1 = 15
     VAR_2 = 7
 
     if VAR_2 == 2:
@@ -178,8 +178,8 @@ class Params:
 
     # For integers use arange and for floats use linspace
 
-    VAR_1_VALUES = [0.2, 0.5, 0.8]
-    VAR_2_VALUES = np.linspace(0.0, 0.4, num=9)
+    VAR_1_VALUES = [0.2]
+    VAR_2_VALUES = np.linspace(0.0, 1, num=21)
 
     # np.arange(16,95,16)
     # np.arange(0.1, 1, 0.4)

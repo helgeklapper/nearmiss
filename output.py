@@ -162,17 +162,17 @@ def graph2(run_dir, var_1, results, res, dpi, round_no,
 
     plt.ylabel(results)
     if results == 'Errors':
-        values = (24, 25)
+        values = (25, 26)
     elif results == 'Reaction':
-        values = (28, 29, 30)
+        values = (29, 30, 31)
     elif results == 'Error Rate':
-        values = (31, 32)
+        values = (32, 33)
     elif results == 'Feedback Omission':
-        values = (31, 35)
-    elif results == 'Feedback Commission':
         values = (32, 36)
+    elif results == 'Feedback Commission':
+        values = (33, 37)
     elif results == 'Near Miss Detection':
-        values = (42, 43)
+        values = (43, 44)
 
     line_no = 0
     for x in values:
@@ -375,18 +375,18 @@ def graph4(run_dir, var_1, results, res, dpi, round_no, colors="Blues_d"):
     markers = ['v', '^', 'o', 's']
 
     if results == 'Signal':
-        values = (39, 40)
+        values = (40, 41)
         plt.ylabel("Accuracy")
         if Params.VAR_2 == 6:
-            plt.xlabel("Ratio latent error")
+            plt.xlabel("Ratio error")
     elif results == 'Signal2':
-        values = (39, 33)
+        values = (40, 34)
         plt.ylabel("Accuracy")
     elif results == 'Failure':
-        values = (42, 46)
+        values = (43, 47)
         plt.ylabel("Ratio")
         if Params.VAR_2 == 6:
-            plt.xlabel("Ratio latent error")
+            plt.xlabel("Ratio error")
 
     line_no = 0
     for x in values:
