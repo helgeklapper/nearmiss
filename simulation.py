@@ -514,6 +514,43 @@ def org_feedback(no_fields_inv, no_fields_rep, org_dec, delta_org, org_weight,
         return org_weight - org_weight * delta_org, 0, org_check
 
 
+def org_fb(no_fields_inv, no_fields_rep, delta_org, org_weight, org_listening,
+           failure, org_thresh, org_check, org_check_change):
+    """
+    Update organizational weighting and threshold to react to problem
+    """
+    if no_fields_inv == 0:
+        correct_ratio = 0
+    else:
+        correct_ratio = no_fields_rep / no_fields_inv
+
+    # if listenening to agents
+    if org_listening == 1:
+        to_agent = int(correct_ratio > org_thresh)
+        # capacity change, if wrong reduce, if right increase
+        if org_check_change == 1 and no_fields_rep > org_check:
+            org_check = org_check - 1 + 2 * to_agent
+    # if listening to observation
+    else:
+        to_agent = -1
+
+    org_check = np.maximum(1, org_check)
+    # print('To Agent', to_agent)
+    # print('Org Weight', org_weight)
+    # print('Org Check', org_check)
+    if to_agent == 1:
+        # if in direction of agents
+        # print(org_weight + (1 - org_weight) * delta_org, 1, org_check)
+        return org_weight + (1 - org_weight) * delta_org, 1, org_check
+    elif to_agent == 0:
+        # if in direction of observation
+        # print(org_weight - org_weight * delta_org, 0, org_check)
+        return org_weight - org_weight * delta_org, 0, org_check
+    else:
+        # print(org_weight, -1, org_check)
+        return org_weight, -1, org_check
+
+
 def time_left(current_time, current_round, start, rounds):
     """Calculates time to finish"""
     passed = current_time - start
@@ -600,8 +637,8 @@ def simulation(args):
                                                   agent_tends)
 
             # Organization's observation of situation
-            observe = np.mean(pathogens)
-            org_report = organization_report(observe)
+            # observe = np.mean(pathogens)
+            # org_report = organization_report(observe)
             ag_report = agents_report(interpret, args.N, args.DEC_STRU)
             ag_non_report = agent_locations2 - interpret
             omit = np.sum(np.multiply(ag_non_report, pathogens))
@@ -614,16 +651,9 @@ def simulation(args):
             # who does the organization listen to this round?
             org_listening = org_listen(org_weight)
 
-            # is the org. going to investigate?
-            org_dec = org_decision(org_listening, org_report, ag_report)
-
             # which field(s) does the org check?
-            if org_dec == 1:
-                org_int = org_investigate(args.X, args.Y, interpret,
-                                          org_check, org_listening,
-                                          args.MIDDLE, int_weight)
-            else:
-                org_int = np.zeros((args.Y, args.X))
+            org_int = org_investigate(args.X, args.Y, interpret, org_check,
+                                      org_listening, args.MIDDLE, int_weight)
             no_fields_inv = np.sum(org_int)
             repair_field = repair(args.X, args.Y, pathogens, org_int,
                                   args.ORG_DETECT)
@@ -655,15 +685,14 @@ def simulation(args):
                                                      args.D_UP, args.D_DOWN,
                                                      org_int)
 
-            org_weight, to_agent, org_check = org_feedback(no_fields_inv,
-                                                           no_fields_repaired,
-                                                           org_dec, args.D_ORG,
-                                                           org_weight,
-                                                           org_listening,
-                                                           error_post,
-                                                           args.ORG_THRESH,
-                                                           org_check,
-                                                           args.ORG_CHECK_CHANGE)
+            org_weight, to_agent, org_check = org_fb(no_fields_inv,
+                                                     no_fields_repaired,
+                                                     args.D_ORG, org_weight,
+                                                     org_listening,
+                                                     error_post,
+                                                     args.ORG_THRESH,
+                                                     org_check,
+                                                     args.ORG_CHECK_CHANGE)
 
             # Next line for testing
             near_miss[e, round_no] = nm_post
@@ -704,7 +733,7 @@ def simulation(args):
                     pct_listened[e, round_no] = 0
                     agents_percentage[e, round_no] = np.NaN
             else:
-                org_correct[e, round_no] = 1 - to_agent
+                org_correct[e, round_no] = np.NaN
                 agents_correct[e, round_no] = np.NaN
                 agents_percentage[e, round_no] = np.NaN
                 pct_listened[e, round_no] = np.NaN

@@ -19,7 +19,7 @@ class Config:
     E = 1000
 
     # Number of rounds
-    ROUNDS = 1
+    ROUNDS = 100
 
     # Number of parts/machines/divisions (columns)
     X = 32
@@ -90,7 +90,7 @@ class Config:
     LINEAR = 0
 
     # Coupling
-    COUPLING = 1
+    COUPLING = 0
 
     # When failure happens, are all errors reset?
     RESET = 0
@@ -166,8 +166,8 @@ class Params:
     GRAPH 3 takes care of rounds as IV
     """
 
-    VAR_1 = 15
-    VAR_2 = 7
+    VAR_1 = 8
+    VAR_2 = 4
 
     if VAR_2 == 2:
         Config.Y = Config.X
@@ -178,8 +178,8 @@ class Params:
 
     # For integers use arange and for floats use linspace
 
-    VAR_1_VALUES = [0.2]
-    VAR_2_VALUES = np.linspace(0.0, 1, num=21)
+    VAR_1_VALUES = [0.1, 0.5, 0.9]
+    VAR_2_VALUES = [0.01, 0.02, 0.03, 0.04, 0.05]
 
     # np.arange(16,95,16)
     # np.arange(0.1, 1, 0.4)
