@@ -8,6 +8,7 @@ import os
 import numpy as np
 
 
+# TODO: to_agent as float
 # TODO: reverse signs of weight on agents
 def init_path_field(x, y, pr_e_mean, pre_e_sd):
     """
