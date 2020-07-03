@@ -123,8 +123,11 @@ def place_agents(x, y, n, agent_columns):
         while True:
             coord_y = np.random.choice(y)
             if agent_locations[coord_y, coord_x] == -1:
+                # First one gives the number of the worker
                 agent_locations[coord_y, coord_x] = entry
+                # NOS is list of coordinate/agent tuple
                 agent_locations_nos.append((coord_y, coord_x, entry))
+                # Second is just binary occupied/free
                 agent_locations2[coord_y, coord_x] = 1
                 break
 
@@ -162,11 +165,11 @@ def field_test(x, y, field, full_field=1):
     # Last row
     failure = 0
     if np.sum(ffield[y - 1, :]) == 0:
-        if np.sum(ffield[y - 2, :]) == 0:
-            near_miss = 0
+        if np.sum(ffield[y - 2, :]) > 0:
+            near_miss = 1
             return near_miss, failure, ff2
         else:
-            near_miss = 1
+            near_miss = 0
             return near_miss, failure, ff2
 
     failure = 1
@@ -233,102 +236,6 @@ def which_test(linear, x, y, field, full_field=1):
     elif linear == 1:
         near_miss, failure, ff2 = field_test_ind(x, y, field, full_field)
     return near_miss, failure, ff2
-
-
-def field_test_linear(x, y, field, mean_pathogens):
-    """
-    Test whether failure occurs, but ignoring percolation
-    Just use linear model
-    """
-    failure = 0
-    random_number = np.rand.random()
-    ff2 = np.zeros((y, x))
-    if random_number > mean_pathogens:
-        failure = 1
-        ff2 = field
-
-    return failure, ff2
-
-
-def field_test_org(x, y, field, full_field=1):
-    """
-    Test whether failure occurs
-    """
-    failure = 0
-    ffield = np.zeros((y, x))
-    ff2 = np.zeros((y, x))
-    field = np.floor(field)
-    new_entrants = list()
-    for col in range(x):
-        ffield[0, col] = field[0, col]
-        if field[0, col] == 1:
-            new_coord = [0, col]
-            new_entrants.append(new_coord)
-    current_entrants = new_entrants
-    new_entrants = list()
-    while len(current_entrants) > 0:
-        for coords in current_entrants:
-            # Check neighbors
-            row = coords[0]
-            col = coords[1]
-            # Down
-            if row < y - 1:
-                if field[row + 1, col] == 1 and ffield[row + 1, col] == 0:
-                    ffield[row + 1, col] = field[row + 1, col]
-                    new_coord = [row + 1, col]
-                    new_entrants.append(new_coord)
-            # Left
-            if col > 0:
-                if field[row, col - 1] == 1 and ffield[row, col - 1] == 0:
-                    ffield[row, col - 1] = field[row, col - 1]
-                    new_coord = [row, col - 1]
-                    new_entrants.append(new_coord)
-            # Right
-            if col < x - 1:
-                if field[row, col + 1] == 1 and ffield[row, col + 1] == 0:
-                    ffield[row, col + 1] = field[row, col + 1]
-                    new_coord = [row, col + 1]
-                    new_entrants.append(new_coord)
-        current_entrants = new_entrants
-        new_entrants = list()
-    last_row = np.sum(ffield[y - 1, :])
-    if last_row > 0:
-        failure = 1
-        if full_field == 1:
-            new_entrants = list()
-            for col in range(x):
-                ff2[y - 1, col] = ffield[y - 1, col]
-                if ffield[y - 1, col] == 1:
-                    new_coord = [y - 1, col]
-                    new_entrants.append(new_coord)
-            current_entrants = new_entrants
-            new_entrants = list()
-            while len(current_entrants) > 0:
-                for coords in current_entrants:
-                    # Check neighbors
-                    row = coords[0]
-                    col = coords[1]
-                    # Up
-                    if row > 0:
-                        if ffield[row - 1, col] == 1 and ff2[row - 1, col] == 0:
-                            ff2[row - 1, col] = ffield[row - 1, col]
-                            new_coord = [row - 1, col]
-                            new_entrants.append(new_coord)
-                    # Left
-                    if col > 0:
-                        if ffield[row, col - 1] == 1 and ff2[row, col - 1] == 0:
-                            ff2[row, col - 1] = ffield[row, col - 1]
-                            new_coord = [row, col - 1]
-                            new_entrants.append(new_coord)
-                    # Right
-                    if col < x - 1:
-                        if ffield[row, col + 1] == 1 and ff2[row, col + 1] == 0:
-                            ff2[row, col + 1] = ffield[row, col + 1]
-                            new_coord = [row, col + 1]
-                            new_entrants.append(new_coord)
-                current_entrants = new_entrants
-                new_entrants = list()
-    return failure, ff2
 
 
 def raw_interpret(x, y, signal_field, location_idx_sets, agent_tend):
@@ -677,8 +584,11 @@ def simulation(args):
             # Signals and Triggers are activated
             signal_field = pathogen_signals(args.X, args.Y, pathogens,
                                             args.NOISE, args.NORMAL)
-            trigger_field = pathogen_trigger(args.X, args.Y, pathogens,
-                                             args.PROB_A)
+            if args.PROB_A < 1:
+                trigger_field = pathogen_trigger(args.X, args.Y, pathogens,
+                                                 args.PROB_A)
+            elif args.PROB_A == 1:
+                trigger_field = pathogens
 
             # Placing agents on the board
             agent_locations, agent_locations2, agent_locations_nos = \
@@ -697,9 +607,9 @@ def simulation(args):
             omit = np.sum(np.multiply(ag_non_report, pathogens))
             commit = np.sum(np.multiply(interpret, 1 - pathogens))
             no_fields_report = np.sum(interpret)
-            nm_theory, error_theory, t_field = which_test(args.LINEAR, args.X,
-                                                          args.Y, pathogens, 0)
-            # nm_theory, error_theory, t_field = field_test(args.X, args.Y, pathogens, 0)
+            nm_t, error_t, t_field = which_test(args.LINEAR, args.X, args.Y,
+                                                pathogens, 0)
+            # nm_t, error_t, t_field = field_test(args.X, args.Y, pathogens, 0)
 
             # who does the organization listen to this round?
             org_listening = org_listen(org_weight)
@@ -725,28 +635,25 @@ def simulation(args):
             # Only update on change
             if np.any(repair_field):
                 pathogens = update_cause_field(pathogens, repair_field)
-                nm_theory_post, error_theory_post, t_field = \
+                nm_t_post, error_t_post, t_field = \
                     which_test(args.LINEAR, args.X, args.Y, pathogens, 0)
                     # field_test(args.X, args.Y, pathogens, 0)
                 trigger_field2 = pathogen_trigger(args.X, args.Y, pathogens,
                                                   args.PROB_A)
             else:
-                error_theory_post = error_theory
+                error_t_post = error_t
                 trigger_field2 = trigger_field
 
             nm_post, error_post, e_field_post = \
                 which_test(args.LINEAR, args.X, args.Y, trigger_field2, 1)
-                # field_test(args.X, args.Y, trigger_field2, 1)
+            # field_test(args.X, args.Y, trigger_field2, 1)
 
             # Agents update their thresholds
             agent_tends, fb_f, fb_c, fb_o = feedback(agent_locations_nos,
-                                                          agent_tends,
-                                                          repair_field,
-                                                          interpret,
-                                                          e_field_post,
-                                                          args.D_UP,
-                                                          args.D_DOWN,
-                                                          org_int)
+                                                     agent_tends, repair_field,
+                                                     interpret, e_field_post,
+                                                     args.D_UP, args.D_DOWN,
+                                                     org_int)
 
             org_weight, to_agent, org_check = org_feedback(no_fields_inv,
                                                            no_fields_repaired,
@@ -760,8 +667,8 @@ def simulation(args):
 
             # Next line for testing
             near_miss[e, round_no] = nm_post
-            if error_theory == 1:
-                near_det[e, round_no] = 1 - error_theory_post
+            if error_t == 1:
+                near_det[e, round_no] = 1 - error_t_post
             else:
                 near_det[e, round_no] = np.NaN
             near_det_ave[e, round_no] = np.nanmean(near_det[e, 0:round_no])

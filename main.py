@@ -16,7 +16,7 @@ from simulation import simulation, time_left
 
 class Config:
     # Number of Environments sampled
-    E = 10000
+    E = 1000
 
     # Number of rounds
     ROUNDS = 1
