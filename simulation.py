@@ -326,10 +326,22 @@ def org_investigate(x, y, interpret, org_check, org_listening, divisions,
     1 for listening to agents
     """
     org_int = np.zeros((y, x))
+    org_ag_int = np.zeros((y, x))
 
     random_order = np.arange((x * y))
     np.random.shuffle(random_order)
     int_w_f = int_w.flatten('F')
+    reported = np.sum(interpret)
+    # print('Int map\n', interpret)
+    pos_reports_y = np.where(interpret)[0]
+    pos_reports_x = np.where(interpret)[1]
+    # print('Position reported', pos_reports_y)
+    # print('Position reported', pos_reports_x)
+    shuffled_number = np.arange(reported)
+    shuffled_number.astype(int)
+    # print('Shuffled numbers', shuffled_number)
+    np.random.shuffle(shuffled_number)
+    # print('Shuffled numbers', shuffled_number)
 
     if org_listening:
         if divisions == 1:
@@ -345,23 +357,38 @@ def org_investigate(x, y, interpret, org_check, org_listening, divisions,
             if interpret[y_c, x_c] == 1:
                 # print('First check at', y_c, x_c)
                 org_int[y_c, x_c] = 1
+                org_ag_int[y_c, x_c] = 1
                 org_check -= 1
             else:
                 org_check = 0
             # print('Checks available agents', org_check)
-            while org_check > 0 and iteration < (x*y):
-                number = random_order[iteration]
+            while org_check > 0 and iteration < reported:
+                shuffled = int(shuffled_number[iteration])
                 iteration += 1
-                # print('Position', number, 'Iteration', iteration)
-                x_c, y_c = np.divmod(number, y)
-                # print('Divmod y and x', y_c, x_c)
-                if (interpret[y_c, x_c] == 1 and
-                    org_int[y_c, x_c] == 0):
+                # print('Position', shuffled, 'Iteration', iteration)
+                x_c = pos_reports_x[shuffled]
+                y_c = pos_reports_y[shuffled]
+                # print('Position', y_c, x_c)
+                if org_int[y_c, x_c] == 0:
                     # Agent interpretation
                     # If there is a reporter error, investigate it
                     org_int[y_c, x_c] = 1
+                    org_ag_int[y_c, x_c] = 1
                     org_check -= 1
-                    # print('Checks left', checks_left)
+                    # print('Checks left', org_check)
+            # while org_check > 0 and iteration < (x*y):
+            #     number = random_order[iteration]
+            #     iteration += 1
+            #     # print('Position', number, 'Iteration', iteration)
+            #     x_c, y_c = np.divmod(number, y)
+            #     # print('Divmod y and x', y_c, x_c)
+            #     if org_int[y_c, x_c] == 0:
+            #         # Agent interpretation
+            #         # If there is a reporter error, investigate it
+            #         org_int[y_c, x_c] = 1
+            #         org_check -= 1
+            #         # print('Checks left', checks_left)
+
         elif divisions > 1:
             # print('Middle managers here')
             len_division = int(np.floor(np.divide(int(x*y), divisions)))
@@ -410,7 +437,9 @@ def org_investigate(x, y, interpret, org_check, org_listening, divisions,
             org_int[np.divmod(number, x)] = 1
 
     # All occuring random checks
-    return org_int
+    # print('Org Int\n', org_int)
+    # print('Org Agents Int\n', org_ag_int)
+    return org_int, org_ag_int
 
 
 def repair(x, y, error_field, interpretation, org_detect):
@@ -581,7 +610,8 @@ def simulation(args):
     org_weight_mat = np.zeros((args.E, args.ROUNDS))
     listen_to_agent = np.zeros((args.E, args.ROUNDS))
     pct_reported = np.zeros((args.E, args.ROUNDS))
-    pct_listened = np.zeros((args.E, args.ROUNDS))
+    pct_inv_agents = np.zeros((args.E, args.ROUNDS))
+    pct_inv_cap = np.zeros((args.E, args.ROUNDS))
     pct_repaired = np.zeros((args.E, args.ROUNDS))
     omission = np.zeros((args.E, args.ROUNDS))
     commission = np.zeros((args.E, args.ROUNDS))
@@ -640,7 +670,7 @@ def simulation(args):
             # Organization's observation of situation
             # observe = np.mean(pathogens)
             # org_report = organization_report(observe)
-            ag_report = agents_report(interpret, args.N, args.DEC_STRU)
+            # ag_report = agents_report(interpret, args.N, args.DEC_STRU)
             ag_non_report = agent_locations2 - interpret
             omit = np.sum(np.multiply(ag_non_report, pathogens))
             commit = np.sum(np.multiply(interpret, 1 - pathogens))
@@ -653,9 +683,10 @@ def simulation(args):
             org_listening = org_listen(org_weight)
 
             # which field(s) does the org check?
-            org_int = org_investigate(args.X, args.Y, interpret, org_check,
-                                      org_listening, args.MIDDLE, int_weight)
-            no_fields_inv = np.sum(org_int)
+            org_int, org_ag_int = org_investigate(args.X, args.Y, interpret,
+                                                  org_check, org_listening,
+                                                  args.MIDDLE, int_weight)
+            no_fields_inv = np.sum(org_ag_int)
             repair_field = repair(args.X, args.Y, pathogens, org_int,
                                   args.ORG_DETECT)
             prob_e_field = np.where(repair_field == 1,
@@ -722,22 +753,25 @@ def simulation(args):
             tend_ave[e, round_no] = np.mean(agent_tends)
             tend_sd[e, round_no] = np.std(agent_tends)
             listen_to_agent[e, round_no] = org_listening
+            no_corr = no_fields_report - commit
             if org_listening == 1:
                 agents_correct[e, round_no] = to_agent
                 org_correct[e, round_no] = np.NaN
                 if no_fields_report > 0:
                     liste = no_fields_inv / no_fields_report
-                    pct_listened[e, round_no] = liste
-                    no_corr = no_fields_report - commit
+                    pct_inv_agents[e, round_no] = liste
+                    pct_inv_cap[e, round_no] = no_fields_inv / args.ORG_CHECK
                     agents_percentage[e, round_no] = no_corr / no_fields_report
                 else:
-                    pct_listened[e, round_no] = 0
+                    pct_inv_agents[e, round_no] = np.NaN
                     agents_percentage[e, round_no] = np.NaN
+                    pct_inv_cap[e, round_no] = np.NaN
             else:
-                org_correct[e, round_no] = np.NaN
+                org_correct[e, round_no] = no_fields_repaired / args.ORG_CHECK
                 agents_correct[e, round_no] = np.NaN
                 agents_percentage[e, round_no] = np.NaN
-                pct_listened[e, round_no] = np.NaN
+                pct_inv_agents[e, round_no] = np.NaN
+                pct_inv_cap[e, round_no] = np.NaN
             org_weight_mat[e, round_no] = org_weight
             pct_reported[e, round_no] = no_fields_report / args.N
 
@@ -787,27 +821,27 @@ def simulation(args):
     r_a[0, :, 27] = np.sum(tend_ave, axis=0) / args.E
     r_a[0, :, 28] = np.sum(tend_sd, axis=0) / args.E
     r_a[0, :, 29] = np.sum(pct_reported, axis=0) / args.E
-    r_a[0, :, 30] = np.nanmean(pct_listened, axis=0)
-    r_a[0, :, 31] = np.sum(pct_repaired, axis=0) / args.E
-    r_a[0, :, 32] = np.sum(omission, axis=0) / args.E
-    r_a[0, :, 33] = np.sum(commission, axis=0) / args.E
-    r_a[0, :, 34] = np.sum(ind_error, axis=0) / args.E
-    r_a[0, :, 35] = np.sum(feedback_fail, axis=0) / args.E
-    r_a[0, :, 36] = np.sum(feedback_omit, axis=0) / args.E
-    r_a[0, :, 37] = np.sum(feedback_commit, axis=0) / args.E
-    r_a[0, :, 38] = np.sum(org_check_mat, axis=0) / args.E
-    r_a[0, :, 39] = np.sum(org_weight_mat, axis=0) / args.E
-    r_a[0, :, 40] = np.nanmean(org_correct, axis=00)
-    r_a[0, :, 41] = np.nanmean(agents_correct, axis=00)
-    r_a[0, :, 42] = np.nanmean(agents_percentage, axis=00)
-    r_a[0, :, 43] = np.nanmean(near_miss, axis=00)
-    r_a[0, :, 44] = np.nanmean(near_det, axis=00)
-    r_a[0, :, 45] = np.nanmean(near_det_ave, axis=00)
-    r_a[0, :, 46] = np.nanmean(near_det_roll, axis=00)
-    r_a[0, :, 47] = np.sum(failure, axis=0) / args.E
-    r_a[0, :, 48] = np.sum(failure_roll, axis=0) / args.E
-    r_a[0, :, 49] = np.sum(failure_ave, axis=0) / args.E
-    r_a[0, :, 50] = np.sum(failure_dummy, axis=0) / args.E
-
+    r_a[0, :, 30] = np.nanmean(pct_inv_agents, axis=0)
+    r_a[0, :, 31] = np.nanmean(pct_inv_cap, axis=0)
+    r_a[0, :, 32] = np.sum(pct_repaired, axis=0) / args.E
+    r_a[0, :, 33] = np.sum(omission, axis=0) / args.E
+    r_a[0, :, 34] = np.sum(commission, axis=0) / args.E
+    r_a[0, :, 35] = np.sum(ind_error, axis=0) / args.E
+    r_a[0, :, 36] = np.sum(feedback_fail, axis=0) / args.E
+    r_a[0, :, 37] = np.sum(feedback_omit, axis=0) / args.E
+    r_a[0, :, 38] = np.sum(feedback_commit, axis=0) / args.E
+    r_a[0, :, 39] = np.sum(org_check_mat, axis=0) / args.E
+    r_a[0, :, 40] = np.sum(org_weight_mat, axis=0) / args.E
+    r_a[0, :, 41] = np.nanmean(org_correct, axis=00)
+    r_a[0, :, 42] = np.nanmean(agents_correct, axis=00)
+    r_a[0, :, 43] = np.nanmean(agents_percentage, axis=00)
+    r_a[0, :, 44] = np.nanmean(near_miss, axis=00)
+    r_a[0, :, 45] = np.nanmean(near_det, axis=00)
+    r_a[0, :, 46] = np.nanmean(near_det_ave, axis=00)
+    r_a[0, :, 47] = np.nanmean(near_det_roll, axis=00)
+    r_a[0, :, 48] = np.sum(failure, axis=0) / args.E
+    r_a[0, :, 49] = np.sum(failure_roll, axis=0) / args.E
+    r_a[0, :, 50] = np.sum(failure_ave, axis=0) / args.E
+    r_a[0, :, 51] = np.sum(failure_dummy, axis=0) / args.E
 
     return r_a

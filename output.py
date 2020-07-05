@@ -123,8 +123,8 @@ def graph1(run_dir, variable_num, res, dpi, round_no, colors="Blues_d"):
     plt.close()
 
 
-def graph2(run_dir, var_1, results, res, dpi, round_no,
-           var_2_ind=0, colors="Blues_d"):
+def graph2(run_dir, var_1, results, res, dpi, round_no, var_2_ind=0,
+           colors="Blues_d"):
     """Creates a graph for defined variable"""
     from main import Config, Params
 
@@ -164,15 +164,15 @@ def graph2(run_dir, var_1, results, res, dpi, round_no,
     if results == 'Errors':
         values = (25, 26)
     elif results == 'Reaction':
-        values = (29, 30, 31)
+        values = (29, 30, 31, 32)
     elif results == 'Error Rate':
-        values = (32, 33)
+        values = (33, 34)
     elif results == 'Feedback Omission':
-        values = (32, 36)
-    elif results == 'Feedback Commission':
         values = (33, 37)
+    elif results == 'Feedback Commission':
+        values = (34, 38)
     elif results == 'Near Miss Detection':
-        values = (43, 44)
+        values = (44, 45)
 
     line_no = 0
     for x in values:
@@ -375,15 +375,15 @@ def graph4(run_dir, var_1, results, res, dpi, round_no, colors="Blues_d"):
     markers = ['v', '^', 'o', 's']
 
     if results == 'Signal':
-        values = (40, 41)
+        values = (43, 49)
         plt.ylabel("Accuracy")
         if Params.VAR_2 == 6:
             plt.xlabel("Ratio error")
     elif results == 'Signal2':
-        values = (40, 34)
+        values = (41, 35)
         plt.ylabel("Accuracy")
     elif results == 'Failure':
-        values = (43, 47)
+        values = (42, 49)
         plt.ylabel("Ratio")
         if Params.VAR_2 == 6:
             plt.xlabel("Ratio error")
@@ -457,7 +457,7 @@ def create_graphs(run_dir, RES):
     from main import Config, Params
 
     if len(Params.VAR_2_VALUES) > 1:
-        for number in range(25, 51):
+        for number in range(26, 52):
             graph1(run_dir, number, RES, Config.DPI, 1, 'Blues_d')
             if Config.ROUNDS > 9:
                 graph1(run_dir, number, RES, Config.DPI, 10, 'Blues_d')
@@ -473,22 +473,22 @@ def create_graphs(run_dir, RES):
             graph4(run_dir, values, 'Failure', RES, Config.DPI, Config.ROUNDS)
 
     if Config.ROUNDS > 1:
-        for number in range(25, 51):
+        for number in range(26, 52):
             for values in range(len(Params.VAR_2_VALUES)):
                 graph3(run_dir, number, RES, Config.DPI, values, 'Blues_d')
         for values in Params.VAR_1_VALUES:
             graph2(run_dir, values, 'Errors', RES,
-                   Config.ROUNDS, Config.DPI)
+                   Config.DPI, Config.ROUNDS)
             graph2(run_dir, values, 'Reaction', RES,
-                   Config.ROUNDS, Config.DPI)
+                   Config.DPI, Config.ROUNDS)
             graph2(run_dir, values, 'Error Rate', RES,
-                   Config.ROUNDS, Config.DPI)
+                   Config.DPI, Config.ROUNDS)
             graph2(run_dir, values, 'Feedback Omission', RES,
-                   Config.ROUNDS, Config.DPI)
+                   Config.DPI, Config.ROUNDS)
             graph2(run_dir, values, 'Feedback Commission', RES,
-                   Config.ROUNDS, Config.DPI)
+                   Config.DPI, Config.ROUNDS)
             graph2(run_dir, values, 'Near Miss Detection', RES,
-                   Config.ROUNDS, Config.DPI)
+                   Config.DPI, Config.ROUNDS)
 
 
 def write_csv(csv_path, RES):

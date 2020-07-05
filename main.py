@@ -16,19 +16,19 @@ from simulation import simulation, time_left
 
 class Config:
     # Number of Environments sampled
-    E = 1000
+    E = 20000
 
     # Number of rounds
     ROUNDS = 100
 
     # Number of parts/machines/divisions (columns)
-    X = 32
+    X = 16
 
     # Number of fail-safes (layers, rows)
-    Y = 12
+    Y = 8
 
     # Number of agents
-    N = 64
+    N = 32
 
     # Errors placed on starting map
     START_E = 0.0
@@ -39,17 +39,17 @@ class Config:
     # Variance in individual thresholds
     TEND_SD = 0.001
 
-    # starting weight for organization
+    # Noise of signal that agents receive
     NOISE = 0.5
 
-    # Noise of signal that agents receive
+    # Type of signal that agents receive
     NORMAL = 0
 
-    # Type of signal that agents receive
+    # starting weight for organization
     S_ORG_WEIGHT = 0.5
 
     # Probability that machine (cell) becomes damaged
-    PROB_E = 0.01
+    PROB_E = 0.03
 
     # Standard deviation of latent error
     PROB_E_SD = 0.00
@@ -69,7 +69,7 @@ class Config:
     D_DOWN = 0.2
 
     # Organizational constraint to check errors
-    ORG_CHECK = 16
+    ORG_CHECK = 6
 
     # Organizational constraint to check errors
     ORG_CHECK_CHANGE = 0
@@ -131,27 +131,28 @@ class Params:
                27: ('tend', 'Reporting climate'),
                28: ('tend_sd', 'Tendency Std. Dev.'),
                29: ('reported', 'Agents reporting'),
-               30: ('listened', 'Units investigated'),
-               31: ('repaired', 'Units repaired'),
-               32: ('omission', 'Omission errors'),
-               33: ('commission', 'Commission errors'),
-               34: ('ind_error', 'Average error rate'),
-               35: ('feedback_fail', 'Feedback failure'),
-               36: ('feedback_omit', 'Feedback omission'),
-               37: ('feedback_commit', 'Feedback commission'),
-               38: ('org_check', 'Org. investigation capability'),
-               39: ('org_weight', 'Weight on worker reports'),
-               40: ('org_correct', 'Overall signal correct'),
-               41: ('agents_correct', 'Agent signal correct'),
-               42: ('agents_percentage', 'Accuracy of workers'),
-               43: ('near_miss', 'Near miss rate'),
-               44: ('near_det', 'Near miss detected'),
-               45: ('near_det_ave', 'Average near miss detected'),
-               46: ('near_det_roll', 'Near miss detected'),
-               47: ('failure', 'Failure rate'),
-               48: ('failure_roll', 'Failure rate'),
-               49: ('failure_ave', 'Average failure rate'),
-               50: ('failure_dummy', 'Failed organizations')
+               30: ('inv_agent', 'Units investigated (Agents)'),
+               31: ('inv_check', 'Units investigated (Capacity)'),
+               32: ('repaired', 'Units repaired'),
+               33: ('omission', 'Omission errors'),
+               34: ('commission', 'Commission errors'),
+               35: ('ind_error', 'Average error rate'),
+               36: ('feedback_fail', 'Feedback failure'),
+               37: ('feedback_omit', 'Feedback omission'),
+               38: ('feedback_commit', 'Feedback commission'),
+               39: ('org_check', 'Org. investigation capability'),
+               40: ('org_weight', 'Weight on worker reports'),
+               41: ('org_correct', 'Overall signal correct'),
+               42: ('agents_correct', 'Accuracy of workers'),
+               43: ('agents_percentage', 'Accuracy of workers'),
+               44: ('near_miss', 'Near miss rate'),
+               45: ('near_det', 'Near miss detected'),
+               46: ('near_det_ave', 'Average near miss detected'),
+               47: ('near_det_roll', 'Near miss detected'),
+               48: ('failure', 'Failure rate'),
+               49: ('failure_roll', 'Failure rate'),
+               50: ('failure_ave', 'Average failure rate'),
+               51: ('failure_dummy', 'Failed organizations')
                }
 
     NO_ATTRIBUTES = len(COLUMNS)
@@ -167,7 +168,7 @@ class Params:
     """
 
     VAR_1 = 8
-    VAR_2 = 4
+    VAR_2 = 18
 
     if VAR_2 == 2:
         Config.Y = Config.X
@@ -179,7 +180,7 @@ class Params:
     # For integers use arange and for floats use linspace
 
     VAR_1_VALUES = [0.1, 0.5, 0.9]
-    VAR_2_VALUES = [0.01, 0.02, 0.03, 0.04, 0.05]
+    VAR_2_VALUES = [6]
 
     # np.arange(16,95,16)
     # np.arange(0.1, 1, 0.4)
@@ -298,7 +299,7 @@ def main_loop_multi():
     instances = len(Params.VAR_1_VALUES) * len(Params.VAR_2_VALUES)
     print('Time: ', datetime.datetime.now().replace(microsecond=0))
     print('Instances', instances)
-    with Pool(processes=7) as pool:
+    with Pool(processes=6) as pool:
         pool.map(wrapper, argument_sets)
 
     RES = np.zeros((len(argument_sets), Config.ROUNDS, Params.NO_ATTRIBUTES))
