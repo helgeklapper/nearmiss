@@ -16,7 +16,7 @@ from simulation import simulation, time_left
 
 class Config:
     # Number of Environments sampled
-    E = 20000
+    E = 25000
 
     # Number of rounds
     ROUNDS = 100
@@ -55,7 +55,7 @@ class Config:
     PROB_E_SD = 0.00
 
     # Probability that if machine is damaged, machine breaks down
-    PROB_A = 1
+    PROB_A = 0.8
 
     # Improvement factors when latent error detected
     IMPROVE = 0.0
@@ -96,7 +96,7 @@ class Config:
     RESET = 0
 
     # For graphs
-    DPI = 200
+    DPI = 300
 
 
 class Params:
@@ -145,10 +145,10 @@ class Params:
                41: ('org_correct', 'Overall signal correct'),
                42: ('agents_correct', 'Accuracy of workers'),
                43: ('agents_percentage', 'Accuracy of workers'),
-               44: ('near_miss', 'Near miss rate'),
-               45: ('near_det', 'Near miss detected'),
-               46: ('near_det_ave', 'Average near miss detected'),
-               47: ('near_det_roll', 'Near miss detected'),
+               44: ('near_miss', 'Near failure rate'),
+               45: ('near_det', 'Near failure detected'),
+               46: ('near_det_ave', 'Average near failure detected'),
+               47: ('near_det_roll', 'Near failure detected'),
                48: ('failure', 'Failure rate'),
                49: ('failure_roll', 'Failure rate'),
                50: ('failure_ave', 'Average failure rate'),
@@ -168,7 +168,7 @@ class Params:
     """
 
     VAR_1 = 8
-    VAR_2 = 18
+    VAR_2 = 4
 
     if VAR_2 == 2:
         Config.Y = Config.X
@@ -180,7 +180,7 @@ class Params:
     # For integers use arange and for floats use linspace
 
     VAR_1_VALUES = [0.1, 0.5, 0.9]
-    VAR_2_VALUES = [6]
+    VAR_2_VALUES = [0.02, 0.03, 0.04, 0.05]
 
     # np.arange(16,95,16)
     # np.arange(0.1, 1, 0.4)

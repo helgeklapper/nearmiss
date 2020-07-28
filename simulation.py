@@ -205,6 +205,44 @@ def field_test(x, y, field, full_field=1):
     return near_miss, failure, ff2
 
 
+def field_test_nm(x, y, field):
+    """
+    Test whether failure occurs
+    """
+    field = np.floor(field)
+    near_miss = 0
+    for row in range(y):
+        new_y = y - 1
+        new_field = np.delete(field, (row), axis=0)
+        ffield = np.zeros((new_y, x))
+        ffield[0, :] = new_field[0, :]
+
+        current_entrants = [(0, i) for i in np.where(new_field[0, :] == 1)[0]]
+        while current_entrants:
+            row, col = current_entrants.pop(0)
+            # Down
+            if row < new_y - 1:
+                if field[row + 1, col] == 1 and ffield[row + 1, col] == 0:
+                    ffield[row + 1, col] = 1
+                    current_entrants.append((row + 1, col))
+            # Left
+            if col > 0:
+                if field[row, col - 1] == 1 and ffield[row, col - 1] == 0:
+                    ffield[row, col - 1] = 1
+                    current_entrants.append((row, col - 1))
+            # Right
+            if col < x - 1:
+                if field[row, col + 1] == 1 and ffield[row, col + 1] == 0:
+                    ffield[row, col + 1] = 1
+                    current_entrants.append((row, col + 1))
+
+        if np.sum(ffield[y - 2, :]) > 0:
+            near_miss = 1
+            break
+
+    return near_miss
+
+
 def field_test_ind(x, y, field, full_field=1):
     """
     Test whether failure occurs
@@ -677,7 +715,8 @@ def simulation(args):
             no_fields_report = np.sum(interpret)
             nm_t, error_t, t_field = which_test(args.LINEAR, args.X, args.Y,
                                                 pathogens, 0)
-            # nm_t, error_t, t_field = field_test(args.X, args.Y, pathogens, 0)
+            # if nm_t == 0 and error_t == 0:
+            #     nm_t = field_test_nm(args.X, args.Y, pathogens)
 
             # who does the organization listen to this round?
             org_listening = org_listen(org_weight)
@@ -686,20 +725,22 @@ def simulation(args):
             org_int, org_ag_int = org_investigate(args.X, args.Y, interpret,
                                                   org_check, org_listening,
                                                   args.MIDDLE, int_weight)
-            no_fields_inv = np.sum(org_ag_int)
+            no_fields_inv = np.sum(org_int)
+            # print('fields investigates by agents', no_fields_inv)
             repair_field = repair(args.X, args.Y, pathogens, org_int,
                                   args.ORG_DETECT)
             prob_e_field = np.where(repair_field == 1,
                                     (prob_e_field * (1 - args.IMPROVE)),
                                     prob_e_field)
             no_fields_repaired = np.sum(repair_field)
+            # print('Fields repaired', no_fields_repaired)
 
             # Only update on change
             if np.any(repair_field):
                 pathogens = update_cause_field(pathogens, repair_field)
                 nm_t_post, error_t_post, t_field = \
                     which_test(args.LINEAR, args.X, args.Y, pathogens, 0)
-                    # field_test(args.X, args.Y, pathogens, 0)
+                # field_test(args.X, args.Y, pathogens, 0)
                 trigger_field2 = pathogen_trigger(args.X, args.Y, pathogens,
                                                   args.PROB_A)
             else:
@@ -727,7 +768,7 @@ def simulation(args):
                                                      args.ORG_CHECK_CHANGE)
 
             # Next line for testing
-            near_miss[e, round_no] = nm_post
+            near_miss[e, round_no] = nm_t
             if error_t == 1:
                 near_det[e, round_no] = 1 - error_t_post
             else:
@@ -762,6 +803,7 @@ def simulation(args):
                     pct_inv_agents[e, round_no] = liste
                     pct_inv_cap[e, round_no] = no_fields_inv / args.ORG_CHECK
                     agents_percentage[e, round_no] = no_corr / no_fields_report
+
                 else:
                     pct_inv_agents[e, round_no] = np.NaN
                     agents_percentage[e, round_no] = np.NaN
@@ -772,11 +814,14 @@ def simulation(args):
                 agents_percentage[e, round_no] = np.NaN
                 pct_inv_agents[e, round_no] = np.NaN
                 pct_inv_cap[e, round_no] = np.NaN
+            if no_fields_inv > 0:
+                pct_repaired[e, round_no] = (no_fields_repaired /
+                                             no_fields_inv)
+            else:
+                pct_repaired[e, round_no] = np.NaN
             org_weight_mat[e, round_no] = org_weight
             pct_reported[e, round_no] = no_fields_report / args.N
 
-            if no_fields_repaired > 0:
-                pct_repaired[e, round_no] = no_fields_repaired / no_fields_inv
             omission[e, round_no] = omit / args.N
             commission[e, round_no] = commit / args.N
             ind_error[e, round_no] = (omit + commit) / args.N
@@ -823,7 +868,7 @@ def simulation(args):
     r_a[0, :, 29] = np.sum(pct_reported, axis=0) / args.E
     r_a[0, :, 30] = np.nanmean(pct_inv_agents, axis=0)
     r_a[0, :, 31] = np.nanmean(pct_inv_cap, axis=0)
-    r_a[0, :, 32] = np.sum(pct_repaired, axis=0) / args.E
+    r_a[0, :, 32] = np.nanmean(pct_repaired, axis=0)
     r_a[0, :, 33] = np.sum(omission, axis=0) / args.E
     r_a[0, :, 34] = np.sum(commission, axis=0) / args.E
     r_a[0, :, 35] = np.sum(ind_error, axis=0) / args.E

@@ -383,7 +383,7 @@ def graph4(run_dir, var_1, results, res, dpi, round_no, colors="Blues_d"):
         values = (41, 35)
         plt.ylabel("Accuracy")
     elif results == 'Failure':
-        values = (42, 49)
+        values = (44, 48)
         plt.ylabel("Ratio")
         if Params.VAR_2 == 6:
             plt.xlabel("Ratio error")
