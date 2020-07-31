@@ -16,10 +16,10 @@ from simulation import simulation, time_left
 
 class Config:
     # Number of Environments sampled
-    E = 25000
+    E = 20000
 
     # Number of rounds
-    ROUNDS = 100
+    ROUNDS = 1
 
     # Number of parts/machines/divisions (columns)
     X = 16
@@ -168,7 +168,7 @@ class Params:
     """
 
     VAR_1 = 8
-    VAR_2 = 4
+    VAR_2 = 7
 
     if VAR_2 == 2:
         Config.Y = Config.X
@@ -180,7 +180,7 @@ class Params:
     # For integers use arange and for floats use linspace
 
     VAR_1_VALUES = [0.1, 0.5, 0.9]
-    VAR_2_VALUES = [0.02, 0.03, 0.04, 0.05]
+    VAR_2_VALUES = np.arange(0, 1, 0.02)
 
     # np.arange(16,95,16)
     # np.arange(0.1, 1, 0.4)

@@ -166,17 +166,11 @@ def field_test(x, y, field, full_field=1):
     # Last row
     failure = 0
     if np.sum(ffield[y - 1, :]) == 0:
-        if np.sum(ffield[y - 2, :]) > 0:
-            near_miss = 1
-            return near_miss, failure, ff2
-        else:
-            near_miss = 0
-            return near_miss, failure, ff2
+        return failure, ff2
 
     failure = 1
-    near_miss = 0
     if full_field != 1:
-        return near_miss, failure, ff2
+        return failure, ff2
 
     current_entrants = list()
     for col in range(x):
@@ -202,45 +196,7 @@ def field_test(x, y, field, full_field=1):
                 ff2[row, col + 1] = 1
                 current_entrants.append((row, col + 1))
 
-    return near_miss, failure, ff2
-
-
-def field_test_nm(x, y, field):
-    """
-    Test whether failure occurs
-    """
-    field = np.floor(field)
-    near_miss = 0
-    for row in range(y):
-        new_y = y - 1
-        new_field = np.delete(field, (row), axis=0)
-        ffield = np.zeros((new_y, x))
-        ffield[0, :] = new_field[0, :]
-
-        current_entrants = [(0, i) for i in np.where(new_field[0, :] == 1)[0]]
-        while current_entrants:
-            row, col = current_entrants.pop(0)
-            # Down
-            if row < new_y - 1:
-                if field[row + 1, col] == 1 and ffield[row + 1, col] == 0:
-                    ffield[row + 1, col] = 1
-                    current_entrants.append((row + 1, col))
-            # Left
-            if col > 0:
-                if field[row, col - 1] == 1 and ffield[row, col - 1] == 0:
-                    ffield[row, col - 1] = 1
-                    current_entrants.append((row, col - 1))
-            # Right
-            if col < x - 1:
-                if field[row, col + 1] == 1 and ffield[row, col + 1] == 0:
-                    ffield[row, col + 1] = 1
-                    current_entrants.append((row, col + 1))
-
-        if np.sum(ffield[y - 2, :]) > 0:
-            near_miss = 1
-            break
-
-    return near_miss
+    return failure, ff2
 
 
 def field_test_ind(x, y, field, full_field=1):
@@ -252,29 +208,25 @@ def field_test_ind(x, y, field, full_field=1):
     ff2 = np.zeros((y, x))
     field = np.floor(field)
     failure = 0
-    near_miss = 0
 
     systems = np.sum(field, axis=0)
     # print('systems', systems)
     failure = np.any(systems == y)
     # print('failure', failure)
 
-    if failure == 0 and np.any(systems == y-1) == 1:
-        near_miss = 1
-
     for row in range(x):
         if systems[row] == y:
             ff2[:, row] = np.ones((y))
 
-    return near_miss, failure, ff2
+    return failure, ff2
 
 
 def which_test(linear, x, y, field, full_field=1):
     if linear == 0:
-        near_miss, failure, ff2 = field_test(x, y, field, full_field)
+        failure, ff2 = field_test(x, y, field, full_field)
     elif linear == 1:
-        near_miss, failure, ff2 = field_test_ind(x, y, field, full_field)
-    return near_miss, failure, ff2
+        failure, ff2 = field_test_ind(x, y, field, full_field)
+    return failure, ff2
 
 
 def raw_interpret(x, y, signal_field, location_idx_sets, agent_tend):
@@ -461,8 +413,7 @@ def org_investigate(x, y, interpret, org_check, org_listening, divisions,
                     x_c, y_c = np.divmod(number, y)
                     # print('Y coordinate', y_c)
                     # print('X coordinate', x_c)
-                    if (interpret[y_c, x_c] == 1 and
-                        org_int[y_c, x_c] == 0):
+                    if (interpret[y_c, x_c] == 1 and org_int[y_c, x_c] == 0):
                         # Agent interpretation
                         # If there is a reporter error, investigate it
                         org_int[y_c, x_c] = 1
@@ -713,10 +664,8 @@ def simulation(args):
             omit = np.sum(np.multiply(ag_non_report, pathogens))
             commit = np.sum(np.multiply(interpret, 1 - pathogens))
             no_fields_report = np.sum(interpret)
-            nm_t, error_t, t_field = which_test(args.LINEAR, args.X, args.Y,
-                                                pathogens, 0)
-            # if nm_t == 0 and error_t == 0:
-            #     nm_t = field_test_nm(args.X, args.Y, pathogens)
+            error_t, t_field = which_test(args.LINEAR, args.X, args.Y,
+                                          pathogens, 0)
 
             # who does the organization listen to this round?
             org_listening = org_listen(org_weight)
@@ -738,7 +687,7 @@ def simulation(args):
             # Only update on change
             if np.any(repair_field):
                 pathogens = update_cause_field(pathogens, repair_field)
-                nm_t_post, error_t_post, t_field = \
+                error_t_post, t_field = \
                     which_test(args.LINEAR, args.X, args.Y, pathogens, 0)
                 # field_test(args.X, args.Y, pathogens, 0)
                 trigger_field2 = pathogen_trigger(args.X, args.Y, pathogens,
@@ -747,7 +696,7 @@ def simulation(args):
                 error_t_post = error_t
                 trigger_field2 = trigger_field
 
-            nm_post, error_post, e_field_post = \
+            error_post, e_field_post = \
                 which_test(args.LINEAR, args.X, args.Y, trigger_field2, 1)
             # field_test(args.X, args.Y, trigger_field2, 1)
 
@@ -768,7 +717,7 @@ def simulation(args):
                                                      args.ORG_CHECK_CHANGE)
 
             # Next line for testing
-            near_miss[e, round_no] = nm_t
+            near_miss[e, round_no] = error_t - error_post
             if error_t == 1:
                 near_det[e, round_no] = 1 - error_t_post
             else:
