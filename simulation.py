@@ -717,7 +717,7 @@ def simulation(args):
                                                      args.ORG_CHECK_CHANGE)
 
             # Next line for testing
-            near_miss[e, round_no] = error_t - error_post
+            near_miss[e, round_no] = int(error_t) - int(error_post)
             if error_t == 1:
                 near_det[e, round_no] = 1 - error_t_post
             else:

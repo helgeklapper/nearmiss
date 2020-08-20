@@ -16,10 +16,10 @@ from simulation import simulation, time_left
 
 class Config:
     # Number of Environments sampled
-    E = 20000
+    E = 5000
 
     # Number of rounds
-    ROUNDS = 1
+    ROUNDS = 100
 
     # Number of parts/machines/divisions (columns)
     X = 16
@@ -90,7 +90,7 @@ class Config:
     LINEAR = 0
 
     # Coupling
-    COUPLING = 0
+    COUPLING = 1
 
     # When failure happens, are all errors reset?
     RESET = 0
@@ -167,8 +167,8 @@ class Params:
     GRAPH 3 takes care of rounds as IV
     """
 
-    VAR_1 = 8
-    VAR_2 = 7
+    VAR_1 = 4
+    VAR_2 = 8
 
     if VAR_2 == 2:
         Config.Y = Config.X
@@ -179,8 +179,8 @@ class Params:
 
     # For integers use arange and for floats use linspace
 
-    VAR_1_VALUES = [0.1, 0.5, 0.9]
-    VAR_2_VALUES = np.arange(0, 1, 0.02)
+    VAR_1_VALUES = [0.03]
+    VAR_2_VALUES = np.arange(0.1, 1, 0.1)
 
     # np.arange(16,95,16)
     # np.arange(0.1, 1, 0.4)
