@@ -19,7 +19,7 @@ class Config:
     E = 5000
 
     # Number of rounds
-    ROUNDS = 100
+    ROUNDS = 1
 
     # Number of parts/machines/divisions (columns)
     X = 16
@@ -167,8 +167,8 @@ class Params:
     GRAPH 3 takes care of rounds as IV
     """
 
-    VAR_1 = 4
-    VAR_2 = 8
+    VAR_1 = 18
+    VAR_2 = 7
 
     if VAR_2 == 2:
         Config.Y = Config.X
@@ -179,8 +179,8 @@ class Params:
 
     # For integers use arange and for floats use linspace
 
-    VAR_1_VALUES = [0.03]
-    VAR_2_VALUES = np.arange(0.1, 1, 0.1)
+    VAR_1_VALUES = [6]
+    VAR_2_VALUES = np.arange(0.00, 1, 0.05)
 
     # np.arange(16,95,16)
     # np.arange(0.1, 1, 0.4)

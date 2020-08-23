@@ -764,6 +764,7 @@ def simulation(args):
                 pct_inv_agents[e, round_no] = np.NaN
                 pct_inv_cap[e, round_no] = np.NaN
             if no_fields_inv > 0:
+                # pct_repaired[e, round_no] = (no_fields_repaired)
                 pct_repaired[e, round_no] = (no_fields_repaired /
                                              no_fields_inv)
             else:
