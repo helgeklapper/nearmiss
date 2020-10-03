@@ -534,7 +534,7 @@ def org_feedback(no_fields_inv, no_fields_rep, org_dec, delta_org, org_weight,
 
 
 def org_fb(no_fields_inv, no_fields_rep, delta_org, org_weight, org_listening,
-           failure, org_thresh, org_check, org_check_change):
+           near_miss_det, org_thresh, org_check, org_check_change):
     """
     Update organizational weighting and threshold to react to problem
     """
@@ -558,11 +558,15 @@ def org_fb(no_fields_inv, no_fields_rep, delta_org, org_weight, org_listening,
     # print('Org Weight', org_weight)
     # print('Org Check', org_check)
     if to_agent == 1:
+        if near_miss_det == 1:
+            delta_org = np.minimum(1, 5 * delta_org)
         # if in direction of agents
         # print(org_weight + (1 - org_weight) * delta_org, 1, org_check)
         return org_weight + (1 - org_weight) * delta_org, 1, org_check
     elif to_agent == 0:
-        # if in direction of observation
+        if near_miss_det == 1:
+            delta_org = np.minimum(1, 5 * delta_org)
+        # if in direction of ignoring
         # print(org_weight - org_weight * delta_org, 0, org_check)
         return org_weight - org_weight * delta_org, 0, org_check
     else:
@@ -707,21 +711,22 @@ def simulation(args):
                                                      args.D_UP, args.D_DOWN,
                                                      org_int)
 
-            org_weight, to_agent, org_check = org_fb(no_fields_inv,
-                                                     no_fields_repaired,
-                                                     args.D_ORG, org_weight,
-                                                     org_listening,
-                                                     error_post,
-                                                     args.ORG_THRESH,
-                                                     org_check,
-                                                     args.ORG_CHECK_CHANGE)
-
-            # Next line for testing
             near_miss[e, round_no] = int(error_t) - int(error_post)
             if error_t == 1:
                 near_det[e, round_no] = 1 - error_t_post
             else:
                 near_det[e, round_no] = np.NaN
+
+            org_weight, to_agent, org_check = org_fb(no_fields_inv,
+                                                     no_fields_repaired,
+                                                     args.D_ORG, org_weight,
+                                                     org_listening,
+                                                     near_det[e, round_no],
+                                                     args.ORG_THRESH,
+                                                     org_check,
+                                                     args.ORG_CHECK_CHANGE)
+
+
             near_det_ave[e, round_no] = np.nanmean(near_det[e, 0:round_no])
             failure[e, round_no] = error_post
             if error_post == 1:

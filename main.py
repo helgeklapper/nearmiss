@@ -16,10 +16,10 @@ from simulation import simulation, time_left
 
 class Config:
     # Number of Environments sampled
-    E = 5000
+    E = 50000
 
     # Number of rounds
-    ROUNDS = 1
+    ROUNDS = 100
 
     # Number of parts/machines/divisions (columns)
     X = 16
@@ -90,7 +90,7 @@ class Config:
     LINEAR = 0
 
     # Coupling
-    COUPLING = 1
+    COUPLING = 0
 
     # When failure happens, are all errors reset?
     RESET = 0
@@ -134,12 +134,12 @@ class Params:
                30: ('inv_agent', 'Units investigated (Agents)'),
                31: ('inv_check', 'Units investigated (Capacity)'),
                32: ('repaired', 'Units repaired'),
-               33: ('omission', 'Omission errors'),
-               34: ('commission', 'Commission errors'),
-               35: ('ind_error', 'Average error rate'),
+               33: ('omission', 'False negative rate'),
+               34: ('commission', 'False positive rate'),
+               35: ('ind_error', 'Average false report rate'),
                36: ('feedback_fail', 'Feedback failure'),
-               37: ('feedback_omit', 'Feedback omission'),
-               38: ('feedback_commit', 'Feedback commission'),
+               37: ('feedback_omit', 'Feedback false negative'),
+               38: ('feedback_commit', 'Feedback false positive'),
                39: ('org_check', 'Org. investigation capability'),
                40: ('org_weight', 'Weight on worker reports'),
                41: ('org_correct', 'Overall signal correct'),
@@ -167,8 +167,8 @@ class Params:
     GRAPH 3 takes care of rounds as IV
     """
 
-    VAR_1 = 18
-    VAR_2 = 7
+    VAR_1 = 7
+    VAR_2 = 8
 
     if VAR_2 == 2:
         Config.Y = Config.X
@@ -179,8 +179,8 @@ class Params:
 
     # For integers use arange and for floats use linspace
 
-    VAR_1_VALUES = [6]
-    VAR_2_VALUES = np.arange(0.00, 1, 0.05)
+    VAR_1_VALUES = [0, 0.1, 0.2]
+    VAR_2_VALUES = [0.4, 0.7]
 
     # np.arange(16,95,16)
     # np.arange(0.1, 1, 0.4)
@@ -299,7 +299,7 @@ def main_loop_multi():
     instances = len(Params.VAR_1_VALUES) * len(Params.VAR_2_VALUES)
     print('Time: ', datetime.datetime.now().replace(microsecond=0))
     print('Instances', instances)
-    with Pool(processes=6) as pool:
+    with Pool(processes=7) as pool:
         pool.map(wrapper, argument_sets)
 
     RES = np.zeros((len(argument_sets), Config.ROUNDS, Params.NO_ATTRIBUTES))
