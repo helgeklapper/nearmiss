@@ -534,7 +534,8 @@ def org_feedback(no_fields_inv, no_fields_rep, org_dec, delta_org, org_weight,
 
 
 def org_fb(no_fields_inv, no_fields_rep, delta_org, org_weight, org_listening,
-           near_miss_det, org_thresh, org_check, org_check_change):
+           near_miss_det, org_thresh, org_check, org_check_change,
+           d_org_detect):
     """
     Update organizational weighting and threshold to react to problem
     """
@@ -559,13 +560,13 @@ def org_fb(no_fields_inv, no_fields_rep, delta_org, org_weight, org_listening,
     # print('Org Check', org_check)
     if to_agent == 1:
         if near_miss_det == 1:
-            delta_org = np.minimum(1, 5 * delta_org)
+            delta_org = np.minimum(1, d_org_detect * delta_org)
         # if in direction of agents
         # print(org_weight + (1 - org_weight) * delta_org, 1, org_check)
         return org_weight + (1 - org_weight) * delta_org, 1, org_check
     elif to_agent == 0:
-        if near_miss_det == 1:
-            delta_org = np.minimum(1, 5 * delta_org)
+        # if near_miss_det == 1:
+        #     delta_org = np.minimum(1, d_org_detect * delta_org)
         # if in direction of ignoring
         # print(org_weight - org_weight * delta_org, 0, org_check)
         return org_weight - org_weight * delta_org, 0, org_check
@@ -617,12 +618,23 @@ def simulation(args):
     org_correct = np.zeros((args.E, args.ROUNDS))
     org_check_mat = np.zeros((args.E, args.ROUNDS))
 
+    if args.ENV == 0:
+        linear = 1
+        coupling = 0
+    elif args.ENV == 1:
+        linear = 0
+        coupling = 0
+    elif args.ENV == 2:
+        linear = 1
+        coupling = 1
+    elif args.ENV == 3:
+        linear = 0
+        coupling = 1
+
     for e in range(args.E):
         """Initializing each run"""
-        if args.LINEAR == 1:
-            prob_e = args.PROB_E
-        else:
-            prob_e = args.PROB_E
+        # Check if next line is needed
+        prob_e = args.PROB_E
         org_weight = args.S_ORG_WEIGHT
         org_check = args.ORG_CHECK
         error_post = 0
@@ -638,7 +650,7 @@ def simulation(args):
         for round_no in range(args.ROUNDS):
             # First, update pathogen/causes
             updated_e_field = update_path_field(args.X, args.Y, prob_e_field,
-                                                pathogens, args.COUPLING)
+                                                pathogens, coupling)
             pathogens = place_errors(args.X, args.Y, pathogens,
                                      updated_e_field, args.RESET, error_post)
 
@@ -668,7 +680,7 @@ def simulation(args):
             omit = np.sum(np.multiply(ag_non_report, pathogens))
             commit = np.sum(np.multiply(interpret, 1 - pathogens))
             no_fields_report = np.sum(interpret)
-            error_t, t_field = which_test(args.LINEAR, args.X, args.Y,
+            error_t, t_field = which_test(linear, args.X, args.Y,
                                           pathogens, 0)
 
             # who does the organization listen to this round?
@@ -692,7 +704,7 @@ def simulation(args):
             if np.any(repair_field):
                 pathogens = update_cause_field(pathogens, repair_field)
                 error_t_post, t_field = \
-                    which_test(args.LINEAR, args.X, args.Y, pathogens, 0)
+                    which_test(linear, args.X, args.Y, pathogens, 0)
                 # field_test(args.X, args.Y, pathogens, 0)
                 trigger_field2 = pathogen_trigger(args.X, args.Y, pathogens,
                                                   args.PROB_A)
@@ -701,7 +713,7 @@ def simulation(args):
                 trigger_field2 = trigger_field
 
             error_post, e_field_post = \
-                which_test(args.LINEAR, args.X, args.Y, trigger_field2, 1)
+                which_test(linear, args.X, args.Y, trigger_field2, 1)
             # field_test(args.X, args.Y, trigger_field2, 1)
 
             # Agents update their thresholds
@@ -724,7 +736,8 @@ def simulation(args):
                                                      near_det[e, round_no],
                                                      args.ORG_THRESH,
                                                      org_check,
-                                                     args.ORG_CHECK_CHANGE)
+                                                     args.ORG_CHECK_CHANGE,
+                                                     args.D_ORG_DETECT)
 
 
             near_det_ave[e, round_no] = np.nanmean(near_det[e, 0:round_no])
@@ -812,8 +825,8 @@ def simulation(args):
     r_a[0, :, 20] = args.RESET
     r_a[0, :, 21] = args.ORG_DETECT
     r_a[0, :, 22] = args.MIDDLE
-    r_a[0, :, 23] = args.LINEAR
-    r_a[0, :, 24] = args.COUPLING
+    r_a[0, :, 23] = args.ENV
+    r_a[0, :, 24] = args.D_ORG_DETECT
 
     # Fill the whole column in 1 go
     r_a[0, :, 25] = np.sum(pathogens_sum, axis=0) / args.E

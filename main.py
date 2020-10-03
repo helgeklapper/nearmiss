@@ -16,7 +16,7 @@ from simulation import simulation, time_left
 
 class Config:
     # Number of Environments sampled
-    E = 50000
+    E = 10000
 
     # Number of rounds
     ROUNDS = 100
@@ -68,6 +68,9 @@ class Config:
     D_UP = 0.4
     D_DOWN = 0.2
 
+    # Multiplier of tendency to listen to agents when near miss detected
+    D_ORG_DETECT = 5
+
     # Organizational constraint to check errors
     ORG_CHECK = 6
 
@@ -86,11 +89,9 @@ class Config:
     # Use divisional checks instead of overall
     MIDDLE = 1
 
-    # Interdependence of subsystems
-    LINEAR = 0
-
-    # Coupling
-    COUPLING = 0
+    # IType of environment
+    # 0: linear, loose, 1: complex, loose, 2: linear, tight, 3: complex, tight
+    ENV = 1
 
     # When failure happens, are all errors reset?
     RESET = 0
@@ -123,8 +124,8 @@ class Params:
                20: ('reset', 'Reset after failure'),
                21: ('org_detect', 'Manager detection capability'),
                22: ('middle', 'Divisions'),
-               23: ('linear', 'Independence'),
-               24: ('coupling', 'Tight Coupling'),
+               23: ('env', 'Type of environment'),
+               24: ('d_org_detect', 'Near failure detection multiplier'),
                # After here output variables
                25: ('pathogens', 'Potential errors'),
                26: ('errors', 'Activated errors'),
@@ -167,8 +168,8 @@ class Params:
     GRAPH 3 takes care of rounds as IV
     """
 
-    VAR_1 = 7
-    VAR_2 = 8
+    VAR_1 = 8
+    VAR_2 = 24
 
     if VAR_2 == 2:
         Config.Y = Config.X
@@ -179,8 +180,8 @@ class Params:
 
     # For integers use arange and for floats use linspace
 
-    VAR_1_VALUES = [0, 0.1, 0.2]
-    VAR_2_VALUES = [0.4, 0.7]
+    VAR_1_VALUES = [0.1, 0.5, 0.9]
+    VAR_2_VALUES = [1, 2, 5]
 
     # np.arange(16,95,16)
     # np.arange(0.1, 1, 0.4)
@@ -223,7 +224,7 @@ def show_first_arguments(first_args):
           first_args.D_UP, first_args.D_DOWN)
     print('Org. updating                                :', first_args.D_ORG)
     print('Reset after failure                          :', first_args.RESET)
-    print('Indepence                                    :', first_args.LINEAR)
+    print('Environment                                  :', first_args.ENV)
     print()
 
 
