@@ -86,6 +86,18 @@ def graph1(run_dir, variable_num, res, dpi, round_no, colors="Blues_d"):
         elif Params.VAR_1 == 8 and x >= 0.7:
             ax.plot(M, Z, label='High', linestyle=style,
                     marker='v', markevery=2)
+        elif Params.VAR_1 == 23 and x == 0:
+            ax.plot(M, Z, label='Linear/Loose', linestyle=style,
+                    marker='v', markevery=2)
+        elif Params.VAR_1 == 23 and x == 1:
+            ax.plot(M, Z, label='Complex/Loose', linestyle=style,
+                    marker='v', markevery=2)
+        elif Params.VAR_1 == 23 and x == 2:
+            ax.plot(M, Z, label='Linear/Tight', linestyle=style,
+                    marker='v', markevery=2)
+        elif Params.VAR_1 == 23 and x == 3:
+            ax.plot(M, Z, label='Complex/Tight', linestyle=style,
+                    marker='v', markevery=2)
         else:
             ax.plot(M, Z, label=str(x), linestyle=style,
                     marker=marker, markevery=2)
