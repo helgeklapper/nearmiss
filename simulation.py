@@ -739,7 +739,6 @@ def simulation(args):
                                                      args.ORG_CHECK_CHANGE,
                                                      args.D_ORG_DETECT)
 
-
             near_det_ave[e, round_no] = np.nanmean(near_det[e, 0:round_no])
             failure[e, round_no] = error_post
             if error_post == 1:
