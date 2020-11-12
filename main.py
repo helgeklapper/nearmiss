@@ -16,7 +16,7 @@ from simulation import simulation, time_left
 
 class Config:
     # Number of Environments sampled
-    E = 25000
+    E = 2500
 
     # Number of rounds
     ROUNDS = 100
@@ -168,7 +168,7 @@ class Params:
     GRAPH 3 takes care of rounds as IV
     """
 
-    VAR_1 = 24
+    VAR_1 = 6
     VAR_2 = 8
 
     if VAR_2 == 2:
@@ -180,7 +180,7 @@ class Params:
 
     # For integers use arange and for floats use linspace
 
-    VAR_1_VALUES = [1, 2, 5]
+    VAR_1_VALUES = [0.6, 0.7, 0.8]
     VAR_2_VALUES = np.arange(0.1, 1, 0.1)
 
     # np.arange(16,95,16)
