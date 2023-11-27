@@ -8,57 +8,16 @@ import os
 import numpy as np
 
 
-# TODO: to_agent as float
-# TODO: reverse signs of weight on agents
-def init_path_field(x, y, pr_e_mean, pre_e_sd):
+def init_path_field(x, y, mean, var):
     """
     Create field that on average has mean latent error prob.
     """
-    if pre_e_sd > 0:
-        alpha = ((1 - pr_e_mean) / pre_e_sd ** 2 - (1 / pr_e_mean)) * pr_e_mean ** 2
-        beta = alpha * ((1 / pr_e_mean) - 1)
+    if var > 0:
+        alpha = mean * ((mean * (1 - mean) / var) - 1)
+        beta = (1 - mean) * ((mean * (1 - mean) / var) - 1)
         return np.random.beta(alpha, beta, (y, x))
     else:
-        return np.ones((y, x)) * pr_e_mean
-
-
-def update_path_field(x, y, pr_e_field, field, coupling):
-    """
-    Update field to take into account added because of infected neighbors
-    """
-    new_pr_field = np.ones([y, x])
-    # print('Error prob field\n', pr_e_field)
-    # print('Latent error field\n', field)
-    if coupling == 0:
-        return pr_e_field
-    for col in range(x):
-        for row in range(y):
-            # Check all possible neighbors
-            # print('Position', col, row)
-            if col == 0:
-                top = col
-                bottom = col + 1
-            elif col == x:
-                top = col - 1
-                bottom = col
-            else:
-                top = col - 1
-                bottom = col + 1
-            if row == 0:
-                left = row
-                right = row + 1
-            elif row == y:
-                left = row - 1
-                right = row
-            else:
-                left = row - 1
-                right = row + 1
-            # print(bottom, top, left, right)
-            # Sum all neighbors that have an (latent) error
-            sum_errors = np.sum(field[left:right+1, top:bottom+1]) + 1
-            new_pr_field[row, col] = pr_e_field[row, col] * sum_errors
-            # print(sum_errors)
-    return new_pr_field
+        return np.ones((y, x)) * mean
 
 
 def place_errors(x, y, field, pr_e_field, reset, failure):
