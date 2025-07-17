@@ -43,7 +43,8 @@ def graph1(run_dir, variable_num, res, dpi, round_no, colors="Blues_d"):
 
     plt.figure(dpi=dpi)
     plt.axes(frameon=0)
-    plt.grid()
+    plt.grid(axis='y', color='lightgray', linewidth=1, rasterized=True,
+             markeredgecolor='black')
     ax = plt.subplot(111)
     plt.ylabel(str(Params.COLUMNS[variable_num][1]))
     plt.xlabel(Params.VAR_2_LABEL)
@@ -54,7 +55,7 @@ def graph1(run_dir, variable_num, res, dpi, round_no, colors="Blues_d"):
     line_no = 0
     for x in Params.VAR_1_VALUES:
         style = linestyles[(line_no % len(linestyles))]
-        marker = markers[(line_no % len(markers))]
+        markery = markers[(line_no % len(markers))]
         line_no += 1
         # print(round_no)
         # print(VAR_1)
@@ -62,50 +63,12 @@ def graph1(run_dir, variable_num, res, dpi, round_no, colors="Blues_d"):
                        res[:, round_no - 1, Params.VAR_2])
         Z = np.extract(res[:, round_no - 1, Params.VAR_1] == x,
                        res[:, round_no - 1, variable_num])
-        if Params.VAR_2 == 1:
-            plt.xlabel("Ratio agents to units")
-            M = np.divide(M, (Config.X * Config.Y))
-        elif Params.VAR_2 == 18:
-            plt.xlabel("Ratio capacity to agents")
-            M = np.divide(M, Config.N)
-        if Params.VAR_1 == 13 and x == 0:
-            ax.plot(M, Z, label='Individual reporting', linestyle=style,
-                    marker='o', markevery=2)
-        elif Params.VAR_1 == 13 and x == 1:
-            ax.plot(M, Z, label='Majority', linestyle=style,
-                    marker=marker, markevery=2)
-        elif Params.VAR_1 == 13 and x == 2:
-            ax.plot(M, Z, label='Consensus', linestyle=style,
-                    marker='s', markevery=2)
-        elif Params.VAR_1 == 8 and x <= 0.3:
-            ax.plot(M, Z, label='Low', linestyle=style,
-                    marker='^', markevery=2)
-        elif Params.VAR_1 == 8 and x < 0.7 and x > 0.3:
-            ax.plot(M, Z, label='Moderate', linestyle=style,
-                    marker='o', markevery=2)
-        elif Params.VAR_1 == 8 and x >= 0.7:
-            ax.plot(M, Z, label='High', linestyle=style,
-                    marker='v', markevery=2)
-        elif Params.VAR_1 == 23 and x == 0:
-            ax.plot(M, Z, label='Linear/Loose', linestyle=style,
-                    marker='v', markevery=2)
-        elif Params.VAR_1 == 23 and x == 1:
-            ax.plot(M, Z, label='Complex/Loose', linestyle=style,
-                    marker='v', markevery=2)
-        elif Params.VAR_1 == 23 and x == 2:
-            ax.plot(M, Z, label='Linear/Tight', linestyle=style,
-                    marker='v', markevery=2)
-        elif Params.VAR_1 == 23 and x == 3:
-            ax.plot(M, Z, label='Complex/Tight', linestyle=style,
-                    marker='v', markevery=2)
-        else:
-            ax.plot(M, Z, label=str(x), linestyle=style,
-                    marker=marker, markevery=2)
+        ax.plot(M, Z, label=str(x), linestyle=style, marker=markery)
 
     box = ax.get_position()
 
     ax.set_position([box.x0, box.y0, box.width, box.height])
-    ax.yaxis.grid(which="major", color='lightgray', linewidth=1, marker='*',
+    ax.yaxis.grid(which="major", color='lightgray', linewidth=1,
                   rasterized=True, markeredgecolor='white')
 
     # Put a legend to the right of the current axis
@@ -289,27 +252,8 @@ def graph3(run_dir, variable_num, res, dpi, var_2=0, colors="Blues_d"):
         # print('X', X)
         Z = res[rel_instance, :, variable_num]
         # print('Z', Z)
-        if Params.VAR_1 == 13 and x == 0:
-            ax.plot(X, Z, label='Individual reporting', linestyle=style,
-                    marker='o', markevery=0.26)
-        elif Params.VAR_1 == 13 and x == 1:
-            ax.plot(X, Z, label='Majority', linestyle=style,
-                    marker=marker, markevery=0.26)
-        elif Params.VAR_1 == 13 and x == 2:
-            ax.plot(X, Z, label='Consensus', linestyle=style,
-                    marker='s', markevery=0.26)
-        elif Params.VAR_1 == 8 and x <= 0.3:
-            ax.plot(X, Z, label='Low', linestyle=style,
-                    marker='^', markevery=(9, 10))
-        elif Params.VAR_1 == 8 and x < 0.7 and x > 0.3:
-            ax.plot(X, Z, label='Moderate', linestyle=style,
-                    marker='o', markevery=(9, 10))
-        elif Params.VAR_1 == 8 and x >= 0.7:
-            ax.plot(X, Z, label='High', linestyle=style,
-                    marker='v', markevery=(9, 10))
-        else:
-            ax.plot(X, Z, label=str(x), linestyle=style, marker=marker,
-                    markevery=(9, 10))
+        ax.plot(X, Z, label=str(x), linestyle=style, marker=marker,
+                markevery=(9, 10))
 
     box = ax.get_position()
     ax.set_position([box.x0, box.y0, box.width, box.height])
@@ -469,7 +413,7 @@ def create_graphs(run_dir, RES):
     from main import Config, Params
 
     if len(Params.VAR_2_VALUES) > 1:
-        for number in range(26, 52):
+        for number in range(14, 28):
             graph1(run_dir, number, RES, Config.DPI, 1, 'Blues_d')
             if Config.ROUNDS > 9:
                 graph1(run_dir, number, RES, Config.DPI, 10, 'Blues_d')
@@ -480,27 +424,27 @@ def create_graphs(run_dir, RES):
             if Config.ROUNDS > 50:
                 graph1(run_dir, number, RES, Config.DPI, Config.ROUNDS,
                        'Blues_d')
-        for values in Params.VAR_1_VALUES:
-            graph4(run_dir, values, 'Signal', RES, Config.DPI, Config.ROUNDS)
-            graph4(run_dir, values, 'Failure', RES, Config.DPI, Config.ROUNDS)
+    #     for values in Params.VAR_1_VALUES:
+    #         graph4(run_dir, values, 'Signal', RES, Config.DPI, Config.ROUNDS)
+    #         graph4(run_dir, values, 'Failure', RES, Config.DPI, Config.ROUNDS)
 
-    if Config.ROUNDS > 1:
-        for number in range(26, 52):
-            for values in range(len(Params.VAR_2_VALUES)):
-                graph3(run_dir, number, RES, Config.DPI, values, 'Blues_d')
-        for values in Params.VAR_1_VALUES:
-            graph2(run_dir, values, 'Errors', RES,
-                   Config.DPI, Config.ROUNDS)
-            graph2(run_dir, values, 'Reaction', RES,
-                   Config.DPI, Config.ROUNDS)
-            graph2(run_dir, values, 'Error Rate', RES,
-                   Config.DPI, Config.ROUNDS)
-            graph2(run_dir, values, 'Feedback Omission', RES,
-                   Config.DPI, Config.ROUNDS)
-            graph2(run_dir, values, 'Feedback Commission', RES,
-                   Config.DPI, Config.ROUNDS)
-            graph2(run_dir, values, 'Near Miss Detection', RES,
-                   Config.DPI, Config.ROUNDS)
+    # if Config.ROUNDS > 1:
+    #     for number in range(26, 52):
+    #         for values in range(len(Params.VAR_2_VALUES)):
+    #             graph3(run_dir, number, RES, Config.DPI, values, 'Blues_d')
+        # for values in Params.VAR_1_VALUES:
+        #     graph2(run_dir, values, 'Errors', RES,
+        #            Config.DPI, Config.ROUNDS)
+        #     graph2(run_dir, values, 'Reaction', RES,
+        #            Config.DPI, Config.ROUNDS)
+        #     graph2(run_dir, values, 'Error Rate', RES,
+        #            Config.DPI, Config.ROUNDS)
+        #     graph2(run_dir, values, 'Feedback Omission', RES,
+        #            Config.DPI, Config.ROUNDS)
+        #     graph2(run_dir, values, 'Feedback Commission', RES,
+        #            Config.DPI, Config.ROUNDS)
+        #     graph2(run_dir, values, 'Near Miss Detection', RES,
+        #            Config.DPI, Config.ROUNDS)
 
 
 def write_csv(csv_path, RES):

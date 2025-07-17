@@ -9,89 +9,56 @@ import copy
 import datetime
 from multiprocessing import Pool, Manager
 import numpy as np
-
+import warnings
 from output import create_dirs, create_graphs, write_csv
-from simulation import simulation, time_left
+from simulation import simulation
 
 
 class Config:
     # Number of Environments sampled
-    E = 2500
+    E = 1000
 
     # Number of rounds
     ROUNDS = 100
 
     # Number of parts/machines/divisions (columns)
-    X = 16
+    X = 8
 
     # Number of fail-safes (layers, rows)
-    Y = 8
+    Y = 6
 
     # Number of agents
-    N = 32
+    N = 8
 
     # Errors placed on starting map
     START_E = 0.0
 
-    # Average starting threshold for individuals
-    S_TEND = 0.5
-
-    # Variance in individual thresholds
-    TEND_SD = 0.001
-
-    # Noise of signal that agents receive
-    NOISE = 0.5
-
-    # Type of signal that agents receive
-    NORMAL = 0
-
-    # starting weight for organization
-    S_ORG_WEIGHT = 0.5
+    # Selection parameter for softmax
+    TAU = 0.5
 
     # Probability that machine (cell) becomes damaged
-    PROB_E = 0.03
+    PROB_E = 0.35
 
     # Standard deviation of latent error
-    PROB_E_SD = 0.00
+    PROB_E_SD = 0.20
 
     # Probability that if machine is damaged, machine breaks down
-    PROB_A = 0.8
+    PROB_A = 1
 
-    # Improvement factors when latent error detected
-    IMPROVE = 0.0
-
-    # Are agents allowed to be in same location
-    # SAME_POS = False
-
-    # Tendency to change threshold upwards and downwards
-    D_ORG = 0.15
-    D_UP = 0.4
-    D_DOWN = 0.2
-
-    # Multiplier of tendency to listen to agents when near miss detected
-    D_ORG_DETECT = 5
+    # Reporting error rate
+    REP_ERROR = 0.0
 
     # Organizational constraint to check errors
-    ORG_CHECK = 6
-
-    # Organizational constraint to check errors
-    ORG_CHECK_CHANGE = 0
-
-    # Organizational threshold to accept signal
-    ORG_THRESH = 0.5
+    ORG_CAP = N
 
     # What decision structure is used
-    DEC_STRU = 0
+    CENTRAL = 0
 
-    # Organizational detection capability
-    ORG_DETECT = 1
+    # Report delay
+    CEN_DELAY = 0
 
     # Use divisional checks instead of overall
     MIDDLE = 1
-
-    # IType of environment
-    # 0: linear, loose, 1: complex, loose, 2: linear, tight, 3: complex, tight
-    ENV = 1
 
     # When failure happens, are all errors reset?
     RESET = 0
@@ -109,51 +76,27 @@ class Params:
                5: ('prob_e_sd', 'Probability of pot. error deviation'),
                6: ('prob_a', 'Probability of activated error'),
                7: ('start_e', 'Initial error rate'),
-               8: ('s_tend', 'Initial reporting climate'),
-               9: ('thresh_sd', 'Starting threshold variance'),
-               10: ('noise', 'Noise in agent signal'),
-               11: ('normal', 'Noise distribution'),
-               12: ('s_org_weight', 'Weight on worker reports'),
-               13: ('org_thresh', 'Org. accept threshold'),
-               14: ('d_up', 'Omission Feedback'),
-               15: ('d_down', 'Commission Feedback'),
-               16: ('d_org', 'Organizational Reactivity'),
-               17: ('dec_stru', 'Decision Structure'),
-               18: ('org_check', 'Org. constraint'),
-               19: ('org_check_change', 'Variable constraint'),
-               20: ('reset', 'Reset after failure'),
-               21: ('org_detect', 'Manager detection capability'),
-               22: ('middle', 'Divisions'),
-               23: ('env', 'Type of environment'),
-               24: ('d_org_detect', 'Near failure detection multiplier'),
+               8: ('tau', 'Softmax parameter'),
+               9: ('reset', 'Reset after failure'),
+               10: ('org_cap', 'Manager detection capability'),
+               11: ('middle', 'Divisions'),
+               12: ('central', 'Centralization'),
+               13: ('rep_error', 'Reporting error'),
                # After here output variables
-               25: ('pathogens', 'Potential errors'),
-               26: ('errors', 'Activated errors'),
-               27: ('tend', 'Reporting climate'),
-               28: ('tend_sd', 'Tendency Std. Dev.'),
-               29: ('reported', 'Agents reporting'),
-               30: ('inv_agent', 'Units investigated (Agents)'),
-               31: ('inv_check', 'Units investigated (Capacity)'),
-               32: ('repaired', 'Units repaired'),
-               33: ('omission', 'False negative rate'),
-               34: ('commission', 'False positive rate'),
-               35: ('ind_error', 'Average false report rate'),
-               36: ('feedback_fail', 'Feedback failure'),
-               37: ('feedback_omit', 'Feedback false negative'),
-               38: ('feedback_commit', 'Feedback false positive'),
-               39: ('org_check', 'Org. investigation capability'),
-               40: ('org_weight', 'Weight on worker reports'),
-               41: ('org_correct', 'Overall signal correct'),
-               42: ('agents_correct', 'Accuracy of workers'),
-               43: ('agents_percentage', 'Accuracy of workers'),
-               44: ('near_miss', 'Near failure rate'),
-               45: ('near_det', 'Near failure detected'),
-               46: ('near_det_ave', 'Average near failure detected'),
-               47: ('near_det_roll', 'Near failure detected'),
-               48: ('failure', 'Failure rate'),
-               49: ('failure_roll', 'Failure rate'),
-               50: ('failure_ave', 'Average failure rate'),
-               51: ('failure_dummy', 'Failed organizations')
+               14: ('errors', 'Activated errors'),
+               15: ('reported', 'Agents reporting'),
+               16: ('inv_agent', 'Units investigated (Agents)'),
+               17: ('inv_check', 'Units investigated (Capacity)'),
+               18: ('repaired', 'Units repaired'),
+               19: ('omission', 'False negative rate'),
+               20: ('commission', 'False positive rate'),
+               21: ('ind_error', 'Average false report rate'),
+               22: ('agents_correct', 'Accuracy of workers'),
+               23: ('agents_percentage', 'Accuracy of workers'),
+               24: ('failure', 'Failure rate'),
+               25: ('failure_roll', 'Failure rate (rolling)'),
+               26: ('failure_ave', 'Average failure rate'),
+               27: ('failure_dummy', 'Failed organizations')
                }
 
     NO_ATTRIBUTES = len(COLUMNS)
@@ -168,7 +111,7 @@ class Params:
     GRAPH 3 takes care of rounds as IV
     """
 
-    VAR_1 = 6
+    VAR_1 = 12
     VAR_2 = 8
 
     if VAR_2 == 2:
@@ -180,8 +123,8 @@ class Params:
 
     # For integers use arange and for floats use linspace
 
-    VAR_1_VALUES = [0.6, 0.7, 0.8]
-    VAR_2_VALUES = np.arange(0.1, 1, 0.1)
+    VAR_1_VALUES = [0, 1]
+    VAR_2_VALUES = np.arange(0.01, 2.1, 0.5)
 
     # np.arange(16,95,16)
     # np.arange(0.1, 1, 0.4)
@@ -216,15 +159,7 @@ def show_first_arguments(first_args):
           first_args.Y, first_args.X)
     print('Initial error, prob. of Error and Activation :',
           first_args.START_E, first_args.PROB_E, first_args.PROB_A)
-    print('Starting Threshold and Variance              :',
-          first_args.S_TEND, first_args.TEND_SD)
-    print('Starting Org. Weight and Threshold           :',
-          first_args.S_ORG_WEIGHT, first_args.ORG_THRESH)
-    print('Downward and upward updating                 :',
-          first_args.D_UP, first_args.D_DOWN)
-    print('Org. updating                                :', first_args.D_ORG)
     print('Reset after failure                          :', first_args.RESET)
-    print('Environment                                  :', first_args.ENV)
     print()
 
 
@@ -255,7 +190,7 @@ def get_argument_sets(results_dict):
 
 
 def main_loop(show_progress=True):
-    np.warnings.filterwarnings('ignore')
+    warnings.filterwarnings('ignore')
 
     argument_sets = get_argument_sets(None)
     RES = np.zeros((len(argument_sets), Config.ROUNDS, Params.NO_ATTRIBUTES))
@@ -273,10 +208,6 @@ def main_loop(show_progress=True):
         if show_progress:
             print('Instance No.: ', instance)
             c_time = datetime.datetime.now().replace(microsecond=0)
-            tleft = time_left(c_time, instance, time_0,
-                              len(Params.VAR_1_VALUES) * len(
-                                  Params.VAR_2_VALUES))
-            print('Time left:', tleft)
     return RES
 
 
@@ -284,7 +215,7 @@ def wrapper(args):
     """
     Unpack the arguments, run simulation and add it to the results
     """
-    np.warnings.filterwarnings('ignore')
+    warnings.filterwarnings('ignore')
 
     arguments, instance, results_dict = args
     results_dict[instance] = simulation(arguments)
@@ -300,10 +231,10 @@ def main_loop_multi():
     instances = len(Params.VAR_1_VALUES) * len(Params.VAR_2_VALUES)
     print('Time: ', datetime.datetime.now().replace(microsecond=0))
     print('Instances', instances)
-    with Pool(processes=6) as pool:
+    with Pool(processes=4) as pool:
         pool.map(wrapper, argument_sets)
 
-    RES = np.zeros((len(argument_sets), Config.ROUNDS, Params.NO_ATTRIBUTES))
+    RES = np.zeros((len(argument_sets), Config.ROUNDS, Params.NO_ATTRIBUTES), dtype=np.float32)
     for instance_id in sorted(results_dict.keys()):
         result = results_dict[instance_id]
         RES[instance_id, :, :] = result
