@@ -257,7 +257,7 @@ def graph3(run_dir, variable_num, res, dpi, var_2=0, colors="Blues_d"):
 
     box = ax.get_position()
     ax.set_position([box.x0, box.y0, box.width, box.height])
-    ax.yaxis.grid(which="major", color='lightgray', linewidth=1, marker='*',
+    ax.yaxis.grid(which="major", color='lightgray', linewidth=1,
                   rasterized=True, markeredgecolor='white')
 
     # Put a legend to the right of the current axis
@@ -413,25 +413,25 @@ def create_graphs(run_dir, RES):
     from main import Config, Params
 
     if len(Params.VAR_2_VALUES) > 1:
-        for number in range(14, 28):
+        for number in range(16, 31):
             graph1(run_dir, number, RES, Config.DPI, 1, 'Blues_d')
-            if Config.ROUNDS > 9:
-                graph1(run_dir, number, RES, Config.DPI, 10, 'Blues_d')
-            if Config.ROUNDS > 10:
-                graph1(run_dir, number, RES, Config.DPI, 20, 'Blues_d')
+            # if Config.ROUNDS > 9:
+            #     graph1(run_dir, number, RES, Config.DPI, 10, 'Blues_d')
+            # if Config.ROUNDS > 10:
+            #     graph1(run_dir, number, RES, Config.DPI, 20, 'Blues_d')
             if Config.ROUNDS > 20:
                 graph1(run_dir, number, RES, Config.DPI, 50, 'Blues_d')
             if Config.ROUNDS > 50:
                 graph1(run_dir, number, RES, Config.DPI, Config.ROUNDS,
                        'Blues_d')
-    #     for values in Params.VAR_1_VALUES:
-    #         graph4(run_dir, values, 'Signal', RES, Config.DPI, Config.ROUNDS)
-    #         graph4(run_dir, values, 'Failure', RES, Config.DPI, Config.ROUNDS)
+        # for values in Params.VAR_1_VALUES:
+        #     graph4(run_dir, values, 'Signal', RES, Config.DPI, Config.ROUNDS)
+        #     graph4(run_dir, values, 'Failure', RES, Config.DPI, Config.ROUNDS)
 
-    # if Config.ROUNDS > 1:
-    #     for number in range(26, 52):
-    #         for values in range(len(Params.VAR_2_VALUES)):
-    #             graph3(run_dir, number, RES, Config.DPI, values, 'Blues_d')
+    if Config.ROUNDS > 1:
+        for number in range(16, 31):
+            for values in range(len(Params.VAR_2_VALUES)):
+                graph3(run_dir, number, RES, Config.DPI, values, 'Blues_d')
         # for values in Params.VAR_1_VALUES:
         #     graph2(run_dir, values, 'Errors', RES,
         #            Config.DPI, Config.ROUNDS)

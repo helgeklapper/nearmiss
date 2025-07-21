@@ -16,19 +16,19 @@ from simulation import simulation
 
 class Config:
     # Number of Environments sampled
-    E = 1000
+    E = 10000
 
     # Number of rounds
-    ROUNDS = 100
+    ROUNDS = 200
 
     # Number of parts/machines/divisions (columns)
-    X = 8
+    X = 20
 
     # Number of fail-safes (layers, rows)
-    Y = 6
+    Y = 4
 
     # Number of agents
-    N = 8
+    N = 16
 
     # Errors placed on starting map
     START_E = 0.0
@@ -37,10 +37,13 @@ class Config:
     TAU = 0.5
 
     # Probability that machine (cell) becomes damaged
-    PROB_E = 0.35
+    PROB_E = 0.1
 
-    # Standard deviation of latent error
-    PROB_E_SD = 0.20
+    # Range of probability for level (y-axis)
+    PROB_E_SD_Y = 0.01
+
+    # Range of probability for cell (x-axis)
+    PROB_E_SD_X = 0.05
 
     # Probability that if machine is damaged, machine breaks down
     PROB_A = 1
@@ -73,30 +76,33 @@ class Params:
                2: ('x', 'Width'),
                3: ('y', 'Height'),
                4: ('prob_e', 'Probability of potential error'),
-               5: ('prob_e_sd', 'Probability of pot. error deviation'),
-               6: ('prob_a', 'Probability of activated error'),
-               7: ('start_e', 'Initial error rate'),
-               8: ('tau', 'Softmax parameter'),
-               9: ('reset', 'Reset after failure'),
-               10: ('org_cap', 'Manager detection capability'),
-               11: ('middle', 'Divisions'),
-               12: ('central', 'Centralization'),
-               13: ('rep_error', 'Reporting error'),
+               5: ('prob_e_sd_y', 'Distribution of error prob. (y-axis)'),
+               6: ('prob_e_sd_x', 'Distribution of error prob. (x-axis)'),
+               7: ('prob_a', 'Probability of activated error'),
+               8: ('start_e', 'Initial error rate'),
+               9: ('tau', 'Softmax parameter'),
+               10: ('reset', 'Reset after failure'),
+               11: ('org_cap', 'Manager detection capability'),
+               12: ('middle', 'Divisions'),
+               13: ('central', 'Centralization'),
+               14: ('rep_error', 'Reporting error'),
+               15: ('cen_delay', 'Reporting delay'),
                # After here output variables
-               14: ('errors', 'Activated errors'),
-               15: ('reported', 'Agents reporting'),
-               16: ('inv_agent', 'Units investigated (Agents)'),
-               17: ('inv_check', 'Units investigated (Capacity)'),
-               18: ('repaired', 'Units repaired'),
-               19: ('omission', 'False negative rate'),
-               20: ('commission', 'False positive rate'),
-               21: ('ind_error', 'Average false report rate'),
-               22: ('agents_correct', 'Accuracy of workers'),
-               23: ('agents_percentage', 'Accuracy of workers'),
-               24: ('failure', 'Failure rate'),
-               25: ('failure_roll', 'Failure rate (rolling)'),
-               26: ('failure_ave', 'Average failure rate'),
-               27: ('failure_dummy', 'Failed organizations')
+               16: ('errors', 'Activated errors'),
+               17: ('reported', 'Agents reporting'),
+               18: ('inv_agent', 'Units investigated (Agents)'),
+               19: ('inv_check', 'Units investigated (Capacity)'),
+               20: ('repaired', 'Units repaired'),
+               21: ('omission', 'False negative rate'),
+               22: ('commission', 'False positive rate'),
+               23: ('ind_error', 'Average false report rate'),
+               24: ('agents_correct', 'Accuracy of workers'),
+               25: ('agents_percentage', 'Accuracy of workers'),
+               26: ('failure', 'Failure rate'),
+               27: ('failure_roll', 'Failure rate (rolling)'),
+               28: ('failure_ave', 'Average failure rate'),
+               29: ('failure_dummy', 'Failed organizations'),
+               30: ('info_error', 'Information error rate')
                }
 
     NO_ATTRIBUTES = len(COLUMNS)
@@ -111,20 +117,12 @@ class Params:
     GRAPH 3 takes care of rounds as IV
     """
 
-    VAR_1 = 12
-    VAR_2 = 8
-
-    if VAR_2 == 2:
-        Config.Y = Config.X
-        Config.N = int(Config.X * Config.Y * 0.2)
-        Config.ORG_CHECK = Config.N / 2
-    elif VAR_2 == 14:
-        Config.D_DOWN = Config.D_UP / 2
+    VAR_1 = 13
+    VAR_2 = 6
 
     # For integers use arange and for floats use linspace
-
     VAR_1_VALUES = [0, 1]
-    VAR_2_VALUES = np.arange(0.01, 2.1, 0.5)
+    VAR_2_VALUES = np.round(np.arange(0, 0.10, 0.01),2)
 
     # np.arange(16,95,16)
     # np.arange(0.1, 1, 0.4)

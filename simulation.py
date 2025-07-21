@@ -8,20 +8,27 @@ import os
 import numpy as np
 
 
-def init_path_field(x, y, mean, var):
+def init_path_field(x, y, mean, range_x, range_y):
     """
     Create field that on average has mean latent error prob.
+    For each row, sample a mean from a uniform distribution (clipped to [0.01, 0.99]).
+    For each cell in the row, sample probability using a uniform distribution with that row's mean and var_y, also clipped.
     """
-    if var > 0:
-        alpha = mean * ((mean * (1 - mean) / var) - 1)
-        # if alpha <= 0: find lowest var that would not lead to negative alpha
-        if alpha <= 0:
-            var = mean * (1 - mean) - 0.01
-        alpha = mean * ((mean * (1 - mean) / var) - 1)
-        beta = (1 - mean) * ((mean * (1 - mean) / var) - 1)
-        return np.random.beta(alpha, beta, (y, x))
-    else:
-        return np.ones((y, x)) * mean
+    # For rows, sample means uniformly around [mean-var_x, mean+var_x]
+    low_row = max(0.01, mean - range_x)
+    high_row = min(0.99, mean + range_x)
+    row_means = np.random.uniform(low=low_row, high=high_row, size=y)
+    # print("Row means:", row_means)
+
+    field = np.zeros((y, x))
+    for i in range(y):
+        # For each cell, sample uniformly around [row_mean-var_y, row_mean+var_y]
+        low_cell = max(0.01, row_means[i] - range_y)
+        high_cell = min(0.99, row_means[i] + range_y)
+        cell_probs = np.random.uniform(low=low_cell, high=high_cell, size=x)
+        field[i, :] = cell_probs
+
+    return field
 
 
 def place_errors(x, y, field, pr_e_field, reset, failure):
@@ -52,28 +59,28 @@ def init_agents(x, y, n, central):
     If centralized, all agents can be everywhere.
     If decentralized, agents are assigned to specific coordinates.
     """
+    agent_positions = np.full((y, x), -1)
     if central == 1:
         # If central, all agents everywhere
-        agent_positions = np.full((y, x), -1)
+        return agent_positions
     elif central == 0:
-        # If decentralized, grid is distributed among agents, first among columns, then rows
-        agent_positions = np.full((y, x), -1)
-        agents_per_col = n // x
-        extra_agents = n % x
+        # Distribute agents among rows first, then columns
+        agents_per_row = n // y
+        extra_agents = n % y
         agent_id = 0
-        for col in range(x):
-            # Distribute extra agents to the first 'extra_agents' columns
-            num_agents_this_col = agents_per_col + (1 if col < extra_agents else 0)
-            rows_per_agent = y // num_agents_this_col
-            extra_rows = y % num_agents_this_col
-            row_start = 0
-            for i in range(num_agents_this_col):
-                # Distribute extra rows to the first 'extra_rows' agents in this column
-                num_rows = rows_per_agent + (1 if i < extra_rows else 0)
-                row_end = row_start + num_rows
-                agent_positions[row_start:row_end, col] = agent_id
+        for row in range(y):
+            # Distribute extra agents to the first 'extra_agents' rows
+            num_agents_this_row = agents_per_row + (1 if row < extra_agents else 0)
+            cols_per_agent = x // num_agents_this_row
+            extra_cols = x % num_agents_this_row
+            col_start = 0
+            for i in range(num_agents_this_row):
+                # Distribute extra columns to the first 'extra_cols' agents in this row
+                num_cols = cols_per_agent + (1 if i < extra_cols else 0)
+                col_end = col_start + num_cols
+                agent_positions[row, col_start:col_end] = agent_id
                 agent_id += 1
-                row_start = row_end
+                col_start = col_end
 
     return agent_positions
 
@@ -83,13 +90,16 @@ def place_agents(x, y, n, agent_pos, belief_mat, tau):
     Place agents on field, either autonomously or by a manager.
     Use softmax to determine where agents are placed.
     """
+    # if belief_mat is a 1D array, copy values it to (y, x)
+    if belief_mat.ndim == 1:
+        belief_mat = np.tile(belief_mat[:, np.newaxis], (1, x))
     agent_locations = np.zeros((y, x), dtype=int)
     available_pos = np.copy(agent_pos)
     # print("Available positions:\n", available_pos)
 
     for agent in range(n):
         # make a list of all coordinates in agent_post that either are -1 or the agent's number
-        agent_coordinates = np.where((available_pos == agent) | (agent_pos == -1))
+        agent_coordinates = np.where((available_pos == agent) | (available_pos == -1))
         coords = list(zip(agent_coordinates[0], agent_coordinates[1]))
         # print(f"Agent {agent} coordinates: {coords}")
         # find the probabilities in belief_mat for these coordinates
@@ -337,6 +347,7 @@ def simulation(args):
     ind_error = np.zeros((args.E, args.ROUNDS))
     agents_correct = np.zeros((args.E, args.ROUNDS))
     agents_percentage = np.zeros((args.E, args.ROUNDS))
+    info_error = np.zeros((args.E, args.ROUNDS))
 
 
     for e in range(args.E):
@@ -347,13 +358,17 @@ def simulation(args):
         failure_d = 0
         failure_a = 0
         prob_e_field = init_path_field(args.X, args.Y,
-                                       prob_e, args.PROB_E_SD)
+                                       prob_e, args.PROB_E_SD_Y, args.PROB_E_SD_X)
+        # Multiply the right side of the field by 2 and divide the left side by 2
+        # mid = args.X // 2
+        # prob_e_field[:, :mid] = prob_e_field[:, :mid] * 0.5
         agent_pos = init_agents(args.X, args.Y, args.N, args.CENTRAL)
         # print("Agent positions:\n", agent_pos)
         error_field = np.zeros((args.Y, args.X))
         report_freq = np.zeros((args.Y, args.X))
+        belief_mat_cen = np.zeros((args.Y))
         belief_mat = np.zeros((args.Y, args.X))
-        repair_wait = np.full((args.Y, args.X), -1.0)
+        repair_wait = np.full((args.Y, args.X), -1, dtype=int)
 
         for round_no in range(args.ROUNDS):
             # print("Round number:", round_no)
@@ -361,7 +376,10 @@ def simulation(args):
             error_field = place_errors(args.X, args.Y, error_field, prob_e_field,
                                        args.RESET, error_post)
             # Placing agents on the board
-            agent_locations = place_agents(args.X, args.Y, args.N, agent_pos, belief_mat, args.TAU)
+            if args.CENTRAL == 0:
+                agent_locations = place_agents(args.X, args.Y, args.N, agent_pos, belief_mat, args.TAU)
+            else:            
+                agent_locations = place_agents(args.X, args.Y, args.N, agent_pos, belief_mat_cen, args.TAU)
 
             # Agents intepretation
             reports = reporting(args.X, args.Y, agent_locations, args.REP_ERROR, error_field)
@@ -391,6 +409,7 @@ def simulation(args):
             report_freq = report_freq + reports
             # print('Fields repaired', no_fields_repaired)
             belief_mat = report_freq / (round_no + 1)
+            belief_mat_cen = np.mean(belief_mat, axis=1)
 
             error_post = field_test(args.X, args.Y, error_field)
             failure[e, round_no] = error_post
@@ -413,7 +432,7 @@ def simulation(args):
             errors[e, round_no] = np.mean(np.floor(error_field))
 
             
-            agents_correct[e, round_no] = corr_reports
+            agents_correct[e, round_no] = corr_reports / args.N
             if no_fields_report > 0:
                 pct_inv_agents[e, round_no] = no_fields_inv / no_fields_report
                 pct_inv_cap[e, round_no] = no_fields_inv / args.ORG_CAP
@@ -435,6 +454,12 @@ def simulation(args):
             omission[e, round_no] = omit / args.N
             commission[e, round_no] = commit / args.N
             ind_error[e, round_no] = (omit + commit) / args.N
+            if args.CENTRAL == 0:
+                info_error[e, round_no] = 1 - np.corrcoef(
+                    belief_mat.flatten(), prob_e_field.flatten())[0, 1]
+            else:
+                info_error[e, round_no] = 1 - np.corrcoef(
+                    np.tile(belief_mat_cen, args.X).flatten(), prob_e_field.flatten())[0, 1]
 
         # print("Error field at end of run", e, ":\n", np.round(prob_e_field, 2))
         # print("Belief matrix at end of run", e, ":\n", np.round(belief_mat, 2))
@@ -448,29 +473,32 @@ def simulation(args):
     r_a[0, :, 2] = args.X
     r_a[0, :, 3] = args.Y
     r_a[0, :, 4] = prob_e
-    r_a[0, :, 5] = args.PROB_E_SD
-    r_a[0, :, 6] = args.PROB_A
-    r_a[0, :, 7] = args.START_E
-    r_a[0, :, 8] = args.TAU
-    r_a[0, :, 9] = args.RESET
-    r_a[0, :, 10] = args.ORG_CAP
-    r_a[0, :, 11] = args.MIDDLE
-    r_a[0, :, 12] = args.CENTRAL
-    r_a[0, :, 13] = args.REP_ERROR
+    r_a[0, :, 5] = args.PROB_E_SD_Y
+    r_a[0, :, 6] = args.PROB_E_SD_X
+    r_a[0, :, 7] = args.PROB_A
+    r_a[0, :, 8] = args.START_E
+    r_a[0, :, 9] = args.TAU
+    r_a[0, :, 10] = args.RESET
+    r_a[0, :, 11] = args.ORG_CAP
+    r_a[0, :, 12] = args.MIDDLE
+    r_a[0, :, 13] = args.CENTRAL
+    r_a[0, :, 14] = args.REP_ERROR
+    r_a[0, :, 15] = args.CEN_DELAY
 
     # Fill the whole column in 1 go
-    r_a[0, :, 14] = np.sum(errors, axis=0) / args.E
-    r_a[0, :, 15] = np.sum(pct_reported, axis=0) / args.E
-    r_a[0, :, 16] = np.nanmean(pct_inv_agents, axis=0)
-    r_a[0, :, 17] = np.nanmean(pct_inv_cap, axis=0)
-    r_a[0, :, 18] = np.nanmean(pct_repaired, axis=0)
-    r_a[0, :, 19] = np.sum(omission, axis=0) / args.E
-    r_a[0, :, 20] = np.sum(commission, axis=0) / args.E
-    r_a[0, :, 21] = np.sum(ind_error, axis=0) / args.E
-    r_a[0, :, 22] = np.nanmean(agents_correct, axis=0)
-    r_a[0, :, 23] = np.nanmean(agents_percentage, axis=0)
-    r_a[0, :, 24] = np.sum(failure, axis=0) / args.E
-    r_a[0, :, 25] = np.sum(failure_roll, axis=0) / args.E
-    r_a[0, :, 26] = np.sum(failure_ave, axis=0) / args.E
-    r_a[0, :, 27] = np.sum(failure_dummy, axis=0) / args.E
+    r_a[0, :, 16] = np.sum(errors, axis=0) / args.E
+    r_a[0, :, 17] = np.sum(pct_reported, axis=0) / args.E
+    r_a[0, :, 18] = np.nanmean(pct_inv_agents, axis=0)
+    r_a[0, :, 19] = np.nanmean(pct_inv_cap, axis=0)
+    r_a[0, :, 20] = np.nanmean(pct_repaired, axis=0)
+    r_a[0, :, 21] = np.sum(omission, axis=0) / args.E
+    r_a[0, :, 22] = np.sum(commission, axis=0) / args.E
+    r_a[0, :, 23] = np.sum(ind_error, axis=0) / args.E
+    r_a[0, :, 24] = np.nanmean(agents_correct, axis=0)
+    r_a[0, :, 25] = np.nanmean(agents_percentage, axis=0)
+    r_a[0, :, 26] = np.sum(failure, axis=0) / args.E
+    r_a[0, :, 27] = np.sum(failure_roll, axis=0) / args.E
+    r_a[0, :, 28] = np.sum(failure_ave, axis=0) / args.E
+    r_a[0, :, 29] = np.sum(failure_dummy, axis=0) / args.E
+    r_a[0, :, 30] = np.sum(info_error, axis=0) / args.E
     return r_a
