@@ -415,13 +415,13 @@ def create_graphs(run_dir, RES):
     if len(Params.VAR_2_VALUES) > 1:
         for number in range(16, 31):
             graph1(run_dir, number, RES, Config.DPI, 1, 'Blues_d')
-            # if Config.ROUNDS > 9:
-            #     graph1(run_dir, number, RES, Config.DPI, 10, 'Blues_d')
-            # if Config.ROUNDS > 10:
-            #     graph1(run_dir, number, RES, Config.DPI, 20, 'Blues_d')
-            if Config.ROUNDS > 20:
+            if Config.ROUNDS > 49:
                 graph1(run_dir, number, RES, Config.DPI, 50, 'Blues_d')
-            if Config.ROUNDS > 50:
+            if Config.ROUNDS > 99:
+                graph1(run_dir, number, RES, Config.DPI, 100, 'Blues_d')
+            if Config.ROUNDS > 199:
+                graph1(run_dir, number, RES, Config.DPI, 200, 'Blues_d')
+            if Config.ROUNDS > 200:
                 graph1(run_dir, number, RES, Config.DPI, Config.ROUNDS,
                        'Blues_d')
         # for values in Params.VAR_1_VALUES:

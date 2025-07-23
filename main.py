@@ -16,13 +16,13 @@ from simulation import simulation
 
 class Config:
     # Number of Environments sampled
-    E = 10000
+    E = 2500
 
     # Number of rounds
-    ROUNDS = 200
+    ROUNDS = 300
 
     # Number of parts/machines/divisions (columns)
-    X = 20
+    X = 16
 
     # Number of fail-safes (layers, rows)
     Y = 4
@@ -37,13 +37,13 @@ class Config:
     TAU = 0.5
 
     # Probability that machine (cell) becomes damaged
-    PROB_E = 0.1
+    PROB_E = 0.05
 
     # Range of probability for level (y-axis)
-    PROB_E_SD_Y = 0.01
+    PROB_E_SD_Y = 0.00
 
     # Range of probability for cell (x-axis)
-    PROB_E_SD_X = 0.05
+    PROB_E_SD_X = 0.03
 
     # Probability that if machine is damaged, machine breaks down
     PROB_A = 1
@@ -118,11 +118,11 @@ class Params:
     """
 
     VAR_1 = 13
-    VAR_2 = 6
+    VAR_2 = 3
 
     # For integers use arange and for floats use linspace
     VAR_1_VALUES = [0, 1]
-    VAR_2_VALUES = np.round(np.arange(0, 0.10, 0.01),2)
+    VAR_2_VALUES = [3, 4, 5, 6, 7, 8, 9, 10] # np.round(np.arange(0, 0.11, 0.01),2)
 
     # np.arange(16,95,16)
     # np.arange(0.1, 1, 0.4)
@@ -229,7 +229,7 @@ def main_loop_multi():
     instances = len(Params.VAR_1_VALUES) * len(Params.VAR_2_VALUES)
     print('Time: ', datetime.datetime.now().replace(microsecond=0))
     print('Instances', instances)
-    with Pool(processes=4) as pool:
+    with Pool(processes=6) as pool:
         pool.map(wrapper, argument_sets)
 
     RES = np.zeros((len(argument_sets), Config.ROUNDS, Params.NO_ATTRIBUTES), dtype=np.float32)
